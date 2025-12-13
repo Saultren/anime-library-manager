@@ -1,0 +1,225 @@
+/* ==================== БАЗОВЫЕ СТИЛИ ==================== */
+
+QWidget {
+    background-color: #1a1a1a;
+    color: #ffffff;
+    font-family: 'Segoe UI', 'Microsoft YaHei', sans-serif;
+    font-size: 14px;
+}
+
+/* ==================== ГЛАВНОЕ ОКНО ==================== */
+
+QMainWindow {
+    background-color: #1a1a1a;
+}
+
+/* ==================== ШАПКА ==================== */
+
+#header {
+    background-color: #252525;
+    border-bottom: 1px solid #404040;
+    padding: 8px;
+}
+
+#btnChooseFolder, #btnScan, #btnRefresh {
+    background-color: transparent;
+    margin-bottom: 10px;
+    border: 2px solid #2a2a2a;
+    border-radius: 12px;
+    padding: 0px;
+    min-width: 40px;
+    min-height: 40px;
+}
+
+#btnChooseFolder:focus, #btnScan:focus, #btnRefresh:focus {
+    outline: none;
+}
+
+#btnChooseFolder:hover, #btnScan:hover, #btnRefresh:hover {
+    background-color: #2a2a2a;
+}
+
+#btnChooseFolder:pressed, #btnScan:pressed, #btnRefresh:pressed {
+    background-color: #e68900;
+}
+
+#searchField {
+    background-color: #2a2a2a;
+    border: 2px solid #404040;
+    border-radius: 12px;
+    padding: 0 16px;
+    height: 42px;
+    font-size: 14px;
+    color: #ffffff;
+    min-width: 400px;
+}
+
+#searchField:focus {
+    border-color: #ff9800;
+    background-color: #2d2d2d;
+}
+
+#searchField::placeholder {
+    color: #808080;
+}
+
+/* ==================== ПРОГРЕСС БАР ==================== */
+
+QProgressBar {
+    background-color: #252525;
+    border: none;
+    height: 4px;
+    border-radius: 2px;
+}
+
+QProgressBar::chunk {
+    background-color: #ff9800;
+    border-radius: 2px;
+}
+
+/* ==================== ПЛИТКИ АНИМЕ ==================== */
+
+#animeTile {
+    background-color: transparent;
+    border-radius: 16px;
+    border: none;
+}
+
+#animeTile:hovered {  /* Специальный стиль для hover */
+    border-color: #ff9800;
+}
+
+#posterLabel {
+    background-color: #252525;
+    border-radius: 12px;
+}
+
+#tileName {
+    color: #ffffff;
+    font-size: 13px;
+    font-weight: 500;
+    padding: 0 8px;
+    min-height: 40px;
+    qproperty-alignment: AlignCenter;
+}
+
+/* ==================== МОДАЛЬНОЕ ОКНО ==================== */
+
+#animeModal {
+    background-color: rgba(0, 0, 0, 0.85);
+}
+
+#centerBlock {
+    background-color: #1a1a1a;
+    border: 1px solid #404040;
+    border-radius: 16px;
+    padding: 20px;
+}
+
+#titleRU {
+    color: #ffffff;
+    font-size: 24px;
+    font-weight: 700;
+    padding: 0;
+    margin: 0 0 4px 0;
+    qproperty-alignment: AlignLeft;
+}
+
+#titleJP {
+    color: #b0b0b0;
+    font-size: 16px;
+    font-weight: 400;
+    padding: 0;
+    margin: 0 0 16px 0;
+    qproperty-alignment: AlignLeft;
+}
+
+#description {
+    color: #b0b0b0;
+    font-size: 14px;
+    line-height: 1.5;
+    padding: 0;
+    margin: 16px 0;
+}
+
+#infoRow {
+    background-color: transparent;
+    border: none;
+}
+
+QLabel[panelInfoLabel="true"] {
+    color: #808080;
+    font-size: 13px;
+    font-weight: 500;
+    padding: 0;
+    margin: 0;
+    qproperty-alignment: AlignLeft;
+}
+
+QLabel[panelInfo="true"] {
+    color: #ffffff;
+    font-size: 13px;
+    font-weight: 400;
+    padding: 0;
+    margin: 0 0 0 8px;
+    qproperty-alignment: AlignLeft;
+}
+
+#watchButton {
+    background-color: #ff9800;
+    color: black;
+    border: none;
+    border-radius: 12px;
+    padding: 12px 24px;
+    font-size: 16px;
+    font-weight: 600;
+    min-height: 44px;
+    min-width: 280px;
+}
+
+#watchButton:hover {
+    background-color: #ffa726;
+    border: none;
+}
+
+#watchButton:pressed {
+    background-color: #e68900;
+}
+
+/* ==================== СКРОЛЛБАР ==================== */
+
+QScrollArea {
+    background-color: #1a1a1a;
+    border: none;
+}
+
+QScrollBar:vertical {
+    border: none;
+    background-color: #252525;
+    width: 12px;
+    margin: 0px;
+}
+
+QScrollBar::handle:vertical {
+    background-color: #ff9800;
+    border-radius: 6px;
+    min-height: 20px;
+}
+
+QScrollBar::handle:vertical:hover {
+    background-color: #ffa726;
+}
+
+QScrollBar::add-line:vertical, QScrollBar::sub-line:vertical {
+    border: none;
+    background: none;
+    height: 0px;
+}
+
+/* ==================== СТАТУС БАР ==================== */
+
+QLabel#statusLabel {
+    color: #b0b0b0;
+    font-size: 12px;
+    padding: 4px 8px;
+}
