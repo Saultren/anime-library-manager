@@ -48,7 +48,7 @@ def setup_logging():
 setup_logging()
 
 # ============== Конфигурация API ==============
-USER_AGENT = "local-lib-test/0.1"
+USER_AGENT = "anime-manager/1.0 (github.com/Saultren/anime-library-manager)"
 # ==============================================
 
 class AnimeStatus(Enum):
@@ -474,7 +474,7 @@ class AnimeLibrary(QObject):
         """Централизованные заголовки для всех запросов к Shikimori"""
         return {
             "User-Agent": self.user_agent,
-            "X-Requested-With": "local-lib-test"
+            "X-Requested-With": "anime-manager"
         }
 
     async def api_get(self, url: str, *, params: Optional[Dict] = None, as_json: bool = False, as_bytes: bool = False):
