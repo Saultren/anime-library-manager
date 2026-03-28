@@ -556,10 +556,20 @@ class AnimeLibrary(QObject):
     # --------------------------------------------
 
     def _start_async_operation(self, coroutine, *args):
-        if not self.loop:
-            self.error_occurred.emit("async_operation", "Нет asyncio event loop")
-            return
-        worker = AsyncWorker(coroutine, *args, loop=self.loop)
+        # Получаем текущий event loop динамически, так как мы больше не храним его в self.loop
+        try:
+            loop = asyncio.get_running_loop()
+        except RuntimeError:
+            # Если нет запущенного цикла (например, вызов извне), берем loop приложения
+            from PySide6.QtWidgets import QApplication
+            app = QApplication.instance()
+            if app and hasattr(app, '_qasync_loop'):
+                loop = app._qasync_loop
+            else:
+                self.error_occurred.emit("async_operation", "Нет asyncio event loop")
+                return
+        
+        worker = AsyncWorker(coroutine, *args, loop=loop)
         
         # Сохраняем ссылку на worker для отслеживания
         self._async_workers.append(worker)

@@ -186,6 +186,28 @@ QLabel[panelInfo="true"] {
     background-color: #e68900;
 }
 
+/* Кнопка загрузки в шапке */
+#btnDownloadModal {
+    background-color: transparent;
+    border: 2px solid #2a2a2a;
+    border-radius: 12px;
+    padding: 0px;
+    min-width: 40px;
+    min-height: 40px;
+}
+
+#btnDownloadModal:focus {
+    outline: none;
+}
+
+#btnDownloadModal:hover {
+    background-color: #2a2a2a;
+}
+
+#btnDownloadModal:pressed {
+    background-color: #e68900;
+}
+
 /* ==================== СКРОЛЛБАР ==================== */
 
 QScrollArea {
