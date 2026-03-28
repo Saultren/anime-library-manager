@@ -438,7 +438,19 @@ class DownloadModal(QWidget):
         torrents = release.get('torrents', [])
         
         # Сортируем торренты: сначала лучшее качество, потом меньший размер
-        sorted_torrents = sorted(torrents, key=lambda t: (-t.get('quality', {}).get('value', 0), t.get('size', 0)))
+        # Словарь приоритетов для сортировки качеств (чем меньше число, тем выше приоритет)
+        quality_priority = {
+            "8k": 0, "4k": 1, "2k": 2, "1080p": 3, 
+            "720p": 4, "576p": 5, "480p": 6, "360p": 7
+        }
+        
+        def sort_key(t):
+            q_val = t.get('quality', {}).get('value', '360p')
+            priority = quality_priority.get(q_val, 99)
+            size = t.get('size', 0)
+            return (priority, -size)
+        
+        sorted_torrents = sorted(torrents, key=sort_key)
         
         # Создаём круговую кнопку
         btn = CircularProgressButton()
@@ -606,12 +618,12 @@ class DownloadModal(QWidget):
         release_name = release['name']['main']
         
         for torrent in sorted_torrents:
-            quality_desc = torrent.get('quality', {}).get('description', 'Unknown')
-            type_desc = torrent.get('type', {}).get('description', 'Unknown')
-            codec_label = torrent.get('codec', {}).get('label', 'Unknown')
+            quality_val = torrent.get('quality', {}).get('value', 'Unknown')
+            type_val = torrent.get('type', {}).get('value', 'Unknown')
+            codec_val = torrent.get('codec', {}).get('value', 'Unknown')
             size_str = self._format_size(torrent.get('size', 0))
             
-            text = f"{quality_desc} | {type_desc} | {codec_label} | {size_str}"
+            text = f"{quality_val} | {type_val} | {codec_val} | {size_str}"
             
             action = menu.addAction(text)
             action.triggered.connect(
