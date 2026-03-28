@@ -311,6 +311,10 @@ class DownloadModal(QWidget):
         try:
             status, search_results = await self.library.search_anilibria_releases(query)
             
+            # Проверка: если окно закрылось во время запроса, прерываемся
+            if not self.isVisible() or not self.results_layout:
+                return
+
             # Удаляем индикатор загрузки
             while self.results_layout.count():
                 child = self.results_layout.takeAt(0)
@@ -321,18 +325,26 @@ class DownloadModal(QWidget):
                         pass
 
             if status != 200 or not search_results:
-                self._show_no_results("Ничего не найдено")
+                if self.isVisible():
+                    self._show_no_results("Ничего не найдено")
                 return
 
             detailed_results = []
             for i, release in enumerate(search_results):
+                # Проверка на каждом шаге цикла
+                if not self.isVisible():
+                    return
+
                 release_id = release.get('id')
                 if not release_id:
                     continue
                         
                 progress_label = QLabel(f"Загрузка деталей... {i+1}/{len(search_results)}")
                 progress_label.setObjectName("tileName")
-                self.results_layout.addWidget(progress_label)
+                try:
+                    self.results_layout.addWidget(progress_label)
+                except RuntimeError:
+                    return
                 
                 detail_status, details = await self.library.get_release_details(release_id)
                 
@@ -348,6 +360,10 @@ class DownloadModal(QWidget):
                 
                 await asyncio.sleep(0.25)
 
+            # Финальная проверка перед отрисовкой
+            if not self.isVisible():
+                return
+
             self._clear_results_layout()
             self.results = detailed_results
             self._render_results()
@@ -355,9 +371,13 @@ class DownloadModal(QWidget):
         except asyncio.CancelledError:
             logging.info(f"Поиск '{query}' отменён")
             raise
+        except RuntimeError as e:
+            # Ловим ошибки удаленных C++ объектов
+            logging.debug(f"UI обновлен после закрытия окна (игнорируем): {e}")
         except Exception as e:
             logging.error(f"Ошибка поиска: {e}")
-            self._show_search_error(str(e), query)
+            if self.isVisible():
+                self._show_search_error(str(e), query)
     
     def _show_search_error(self, error_message: str, query: str):
         """Показать ошибку поиска с кнопкой повтора"""
