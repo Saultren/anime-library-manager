@@ -77,7 +77,8 @@ class TorrentManager:
             'upload_rate_limit': 0,
             'download_rate_limit': 0,
             'stop_tracker_timeout': 5,
-            'save_resume_data_interval': 60,
+            'enable_dht': True,
+            'enable_lsd': True,
         }
         session.apply_settings(settings)
         return session
@@ -89,7 +90,7 @@ class TorrentManager:
         session = lt.session({'listen_interfaces': f'0.0.0.0:{port}'})
         settings = {
             'user_agent': 'AnimeLibrary/1.0',
-            'dht': False,
+            'stop_tracker_timeout': 5,
             'pex': False,
             'lsd': False,
             'announce_to_all_trackers': True,
@@ -161,7 +162,9 @@ class TorrentManager:
                 await asyncio.to_thread(lambda: self.resume_file.write_bytes(pickle.dumps(resume_data)))
             
             session_state = await asyncio.to_thread(self.session.save_state)
-            await asyncio.to_thread(lambda: self.session_file.write_bytes(session_state))
+
+            encoded_state = await asyncio.to_thread(lambda: lt.bencode(session_state))
+            await asyncio.to_thread(lambda: self.session_file.write_bytes(encoded_state))
             
         except Exception as e:
             logging.error(f"Критическая ошибка сохранения состояния: {e}")
@@ -189,7 +192,6 @@ class TorrentManager:
                 'ti': info,
                 'save_path': str(release_save_path),
                 'storage_mode': lt.storage_mode_t.storage_mode_sparse,
-                'flags': lt.torrent_flags.normal,
             }
             
             handle = await asyncio.to_thread(self.session.add_torrent, params)

@@ -233,13 +233,15 @@ class MainWindow(QMainWindow):
         modal.show()
         
         # Если есть активные загрузки, сразу переключаемся в режим загрузок
-        if self.library.torrent_manager and self.library.torrent_manager.active_downloads:
-            # Небольшая задержка, чтобы модалка успела отрисоваться
+        if self.library.torrent_manager:
+            # Небольшая задержка, чтобы модалка успела отрисоваться и асинхронно получить статусы
             QTimer.singleShot(100, lambda: asyncio.ensure_future(self._switch_modal_to_downloads(modal)))
-    
+
     async def _switch_modal_to_downloads(self, modal: DownloadModal):
         """Переключить модалку в режим загрузок, если они есть"""
-        modal._switch_to_downloads_mode()
+        statuses = await self.library.torrent_manager.get_all_statuses()
+        if statuses:
+            modal._switch_to_downloads_mode()
 
     def on_choose_folder(self):
         """Диалог выбора папки с аниме через QFileDialog"""
@@ -297,9 +299,7 @@ class MainWindow(QMainWindow):
         
         # Выполняем поиск и обновляем UI
         results = self._search_anime(search_query)
-        self.clear_grid()
-        for entry in results:
-            self.add_anime_tile(entry)
+        self.load_anime_grid(results)  # Используем load_anime_grid для отрисовки результатов
         
         self._update_status(f"Найдено {len(results)} результатов по запросу '{text}'")
         logging.debug(f"Поиск '{text}': {len(results)} результатов")
