@@ -195,6 +195,47 @@ class AnimeLibrary(QObject):
         # Event loop больше не храним в переменной класса, чтобы избежать проблем
         # с разными потоками. Используем asyncio.get_running_loop() там, где нужно.
 
+    # ---------------- Torrent Manager Methods -----------------
+    def setup_torrent_manager(self, save_path: Optional[str] = None):
+        """Инициализировать менеджер загрузок (только создание объекта)"""
+        if save_path:
+            self._torrent_save_path = Path(save_path).expanduser()
+        
+        if not self.torrent_manager:
+            self.torrent_manager = TorrentManager(
+                save_path=self._torrent_save_path
+            )
+
+    async def ensure_torrent_manager_started(self):
+        """Гарантировать запуск менеджера (вызывать перед первой загрузкой)"""
+        if not self.torrent_manager:
+            self.setup_torrent_manager()
+        
+        # Если сессия еще не запущена - запускаем
+        if not hasattr(self.torrent_manager, 'session') or not self.torrent_manager.session:
+            await self.torrent_manager.start()
+
+    async def download_release(self, release_id: int, release_name: str, torrent_id: int) -> str:
+        """Полный цикл загрузки релиза"""
+        try:
+            # Гарантируем запуск менеджера
+            await self.ensure_torrent_manager_started()
+            
+            # Скачиваем .torrent
+            torrent_path = await self.download_torrent_file(torrent_id, release_name)
+            
+            # Добавляем в менеджер (теперь возвращает просто info_hash)
+            info_hash = await self.torrent_manager.add_torrent(Path(torrent_path), release_name)
+            
+            # Эмитим сигнал
+            self.download_started.emit(release_id, info_hash)
+            
+            return info_hash
+            
+        except Exception as e:
+            self.download_error.emit(str(release_id), str(e))
+            raise
+
     # ---------------- директории ----------------
     def _setup_directories(self):
         """Создание необходимых директорий для кэша и конфигурации"""
@@ -1241,61 +1282,6 @@ class LibraryScanner(QObject):
         finally:
             self.finished.emit()
     
-    def stop(self):
-        """Остановка сканирования"""
-        self._is_running = False
-
-
-    def setup_torrent_manager(self, save_path: Optional[str] = None):
-        """Инициализировать менеджер загрузок (только создание объекта)"""
-        if save_path:
-            self._torrent_save_path = Path(save_path).expanduser()
-        
-        if not self.torrent_manager:
-            self.torrent_manager = TorrentManager(
-                save_path=self._torrent_save_path
-            )
-
-    async def ensure_torrent_manager_started(self):
-        """Гарантировать запуск менеджера (вызывать перед первой загрузкой)"""
-        if not self.torrent_manager:
-            self.setup_torrent_manager()
-        
-        # Если сессия еще не запущена - запускаем
-        if not hasattr(self.torrent_manager, 'session') or not self.torrent_manager.session:
-            await self.torrent_manager.start()
-
-    async def download_release(self, release_id: int, release_name: str, torrent_id: int) -> str:
-        """Полный цикл загрузки релиза"""
-        try:
-            # Гарантируем запуск менеджера
-            await self.ensure_torrent_manager_started()
-            
-            # Скачиваем .torrent
-            torrent_path = await self.download_torrent_file(torrent_id, release_name)
-            
-            # Добавляем в менеджер (теперь возвращает просто info_hash)
-            info_hash = await self.torrent_manager.add_torrent(Path(torrent_path), release_name)
-            
-            # Эмитим сигнал
-            self.download_started.emit(release_id, info_hash)
-            
-            return info_hash
-            
-        except Exception as e:
-            self.download_error.emit(str(release_id), str(e))
-            raise
-            self.download_started.emit(release_id, info_hash)
-            
-            if already_exists:
-                logging.info(f"Торрент уже загружался ранее: {info_hash}")
-            
-            return info_hash
-            
-        except Exception as e:
-            logging.error(f"Ошибка при загрузке релиза {release_id}: {e}")
-            self.download_error.emit(str(release_id), str(e))
-            raise
     # --------------------------------------------
 
 
