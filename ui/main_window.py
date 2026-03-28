@@ -231,6 +231,15 @@ class MainWindow(QMainWindow):
         modal = DownloadModal(self, self.library)
         modal.closed.connect(modal.deleteLater)
         modal.show()
+        
+        # Если есть активные загрузки, сразу переключаемся в режим загрузок
+        if self.library.torrent_manager and self.library.torrent_manager.active_downloads:
+            # Небольшая задержка, чтобы модалка успела отрисоваться
+            QTimer.singleShot(100, lambda: asyncio.ensure_future(self._switch_modal_to_downloads(modal)))
+    
+    async def _switch_modal_to_downloads(self, modal: DownloadModal):
+        """Переключить модалку в режим загрузок, если они есть"""
+        modal._switch_to_downloads_mode()
 
     def on_choose_folder(self):
         """Диалог выбора папки с аниме через QFileDialog"""
@@ -482,6 +491,27 @@ class MainWindow(QMainWindow):
             except RuntimeError:
                 # Объект уже удален — игнорируем
                 pass
+        
+        # Останавливаем торрент-менеджер если он есть
+        if hasattr(self.library, 'torrent_manager') and self.library.torrent_manager:
+            try:
+                # Создаем временный event loop если нужно для shutdown
+                import asyncio
+                try:
+                    loop = asyncio.get_running_loop()
+                    # Если мы внутри running loop, создаем задачу
+                    future = asyncio.ensure_future(self.library.torrent_manager.shutdown())
+                    # Ждем немного (в синхронном контексте это может не сработать идеально,
+                    # но лучше чем ничего)
+                    import time
+                    time.sleep(0.5) 
+                except RuntimeError:
+                    # Нет running loop, создаем новый
+                    new_loop = asyncio.new_event_loop()
+                    new_loop.run_until_complete(self.library.torrent_manager.shutdown())
+                    new_loop.close()
+            except Exception as e:
+                logging.error(f"Ошибка остановки torrent_manager: {e}")
 
     def closeEvent(self, event):
         """Обработчик закрытия окна — минимальная логика"""

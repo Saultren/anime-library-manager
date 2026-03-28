@@ -32,6 +32,7 @@ class DownloadModal(QWidget):
         self.active_monitors: Dict[str, CircularProgressButton] = {}
         self.download_widgets: Dict[int, CircularProgressButton] = {}
         self._monitor_tasks: Dict[str, asyncio.Task] = {}
+        self._current_mode = "search"  # "search" или "downloads"
         
         # FIX 1: Явно LTR
         self.setLayoutDirection(Qt.LayoutDirection.LeftToRight)
@@ -133,9 +134,9 @@ class DownloadModal(QWidget):
         main_layout.setSpacing(self.DEFAULT_MARGIN)
 
         # Заголовок
-        title = QLabel("Поиск и загрузка аниме")
-        title.setObjectName("titleRU")
-        main_layout.addWidget(title)
+        self.title_label = QLabel("Поиск и загрузка аниме")
+        self.title_label.setObjectName("titleRU")
+        main_layout.addWidget(self.title_label)
 
         # Поисковая строка
         self.search_field = AnimatedLineEdit()
@@ -143,7 +144,7 @@ class DownloadModal(QWidget):
         self.search_field.returnPressed.connect(self.on_search)
         main_layout.addWidget(self.search_field)
 
-        # Список результатов
+        # Список результатов / Активные загрузки
         scroll = QScrollArea()
         scroll.setWidgetResizable(True)
         scroll.setStyleSheet("QScrollArea { background: transparent; border: none; }")
@@ -159,11 +160,11 @@ class DownloadModal(QWidget):
         # Кнопка закрыть
         close_btn = QPushButton("Закрыть")
         close_btn.setObjectName("watchButton")
-        close_btn.clicked.connect(self.close_modal)
+        close_btn.clicked.connect(lambda: asyncio.ensure_future(self.close_modal()))
         main_layout.addWidget(close_btn, alignment=Qt.AlignCenter)
 
-        # Добавляем начальное сообщение
-        self._show_no_results("Начните поиск по Aniliberty")
+        # Инициализация: показываем поиск или активные загрузки
+        self._switch_to_search_mode()
 
     def _clear_results_layout(self):
         """Очистить layout полностью безопасно"""
@@ -175,6 +176,21 @@ class DownloadModal(QWidget):
                 except RuntimeError:
                     pass
 
+    def _switch_to_search_mode(self):
+        """Переключиться в режим поиска"""
+        self._current_mode = "search"
+        self.title_label.setText("Поиск и загрузка аниме")
+        self.search_field.show()
+        self.search_field.clear()
+        self._show_no_results("Начните поиск по Aniliberty")
+
+    def _switch_to_downloads_mode(self):
+        """Переключиться в режим активных загрузок"""
+        self._current_mode = "downloads"
+        self.title_label.setText("Активные загрузки")
+        self.search_field.hide()
+        self._render_active_downloads()
+
     def _show_no_results(self, message: str):
         """Показать сообщение об отсутствии результатов"""
         self._clear_results_layout()
@@ -184,6 +200,59 @@ class DownloadModal(QWidget):
         no_results_label.setObjectName("tileName")
         no_results_label.setAlignment(Qt.AlignCenter)
         self.results_layout.addWidget(no_results_label)
+
+    def _render_active_downloads(self):
+        """Отобразить список активных загрузок"""
+        self._clear_results_layout()
+        
+        if not self.active_monitors:
+            self._show_no_results("Нет активных загрузок")
+            return
+
+        for info_hash, btn in self.active_monitors.items():
+            item_widget = self._create_download_item(info_hash, btn)
+            self.results_layout.addWidget(item_widget)
+
+        self.results_layout.addStretch()
+
+    def _create_download_item(self, info_hash: str, btn: CircularProgressButton):
+        """Создать элемент списка активной загрузки"""
+        container = QFrame()
+        container.setObjectName("downloadItem")
+        container.setFixedHeight(80)
+        container.setLayoutDirection(Qt.LayoutDirection.LeftToRight)
+
+        layout = QHBoxLayout(container)
+        layout.setContentsMargins(15, 10, 15, 10)
+        layout.setSpacing(15)
+
+        # Левая часть: информация
+        info_layout = QVBoxLayout()
+        info_layout.setSpacing(3)
+        info_layout.setContentsMargins(0, 0, 0, 0)
+        
+        # Получаем имя релиза из свойства кнопки
+        release_name = btn.property("release_name") or f"Загрузка {info_hash[:8]}..."
+        
+        title_label = QLabel(release_name)
+        title_label.setObjectName("downloadTitle")
+        title_label.setAlignment(Qt.AlignLeft)
+        info_layout.addWidget(title_label)
+        
+        # Мета-информация (статус будет обновляться через кнопку)
+        meta_label = QLabel("Загрузка...")
+        meta_label.setObjectName("downloadMeta")
+        meta_label.setAlignment(Qt.AlignLeft)
+        info_layout.addWidget(meta_label)
+
+        layout.addLayout(info_layout)
+        layout.addStretch()
+
+        # Правая часть: кнопка с прогрессом (уже существующая)
+        btn.setFixedSize(40, 40)
+        layout.addWidget(btn)
+
+        return container
 
     def on_search(self):
         query = self.search_field.text().strip()
@@ -247,9 +316,39 @@ class DownloadModal(QWidget):
             self.results = detailed_results
             self._render_results()
 
+        except asyncio.CancelledError:
+            logging.info(f"Поиск '{query}' отменён")
+            raise
         except Exception as e:
             logging.error(f"Ошибка поиска: {e}")
-            self._show_no_results(f"Ошибка: {str(e)}")
+            self._show_search_error(str(e), query)
+    
+    def _show_search_error(self, error_message: str, query: str):
+        """Показать ошибку поиска с кнопкой повтора"""
+        self._clear_results_layout()
+        
+        container = QWidget()
+        layout = QVBoxLayout(container)
+        layout.setAlignment(Qt.AlignCenter)
+        layout.setSpacing(15)
+        
+        error_label = QLabel(f"Ошибка при поиске:\n{error_message}")
+        error_label.setObjectName("tileName")
+        error_label.setAlignment(Qt.AlignCenter)
+        error_label.setWordWrap(True)
+        layout.addWidget(error_label)
+        
+        retry_btn = QPushButton("🔄 Повторить поиск")
+        retry_btn.setObjectName("watchButton")
+        retry_btn.clicked.connect(lambda: self._retry_search(query))
+        layout.addWidget(retry_btn, alignment=Qt.AlignCenter)
+        
+        self.results_layout.addWidget(container)
+    
+    def _retry_search(self, query: str):
+        """Повторить поиск после ошибки"""
+        self.search_field.setText(query)
+        self.on_search()
 
     def _render_results(self):
         """Отобразить список результатов притянутым кверху"""
@@ -350,6 +449,9 @@ class DownloadModal(QWidget):
 
     def _on_download_click(self, release_id: int, release_name: str, torrent_id: int, btn: CircularProgressButton):
         """Обработчик нажатия кнопки скачать"""
+        # Сохраняем имя релиза для отображения в списке загрузок
+        btn.setProperty("release_name", release_name)
+        
         btn.setEnabled(False)
         btn.start_progress()  # Показываем круговой прогресс
 
@@ -359,8 +461,11 @@ class DownloadModal(QWidget):
                 self.active_monitors[info_hash] = btn
                 
                 # Создаем задачу мониторинга
-                task = asyncio.create_task(self._monitor_download(info_hash, btn))
+                task = asyncio.create_task(self._monitor_download(info_hash, btn, release_name))
                 self._monitor_tasks[info_hash] = task
+                
+                # Переключаемся в режим загрузок при начале загрузки
+                self._switch_to_downloads_mode()
                 
                 await task
             except asyncio.CancelledError:
@@ -371,14 +476,23 @@ class DownloadModal(QWidget):
                 btn.stop_progress()
                 btn.setText("❌")
                 btn.setEnabled(True)
+                # Добавляем кнопку повтора на саму кнопку при ошибке
+                btn.setToolTip(f"Ошибка: {str(e)}\nНажмите для повтора")
+                btn.clicked.connect(lambda: self._retry_download(release_id, release_name, torrent_id, btn))
             finally:
                 # Удаляем задачу из списка активных при завершении
                 if 'info_hash' in locals() and info_hash in self._monitor_tasks:
                     del self._monitor_tasks[info_hash]
 
         self.library._start_async_operation(start_and_monitor)
+    
+    def _retry_download(self, release_id: int, release_name: str, torrent_id: int, btn: CircularProgressButton):
+        """Повторить загрузку после ошибки"""
+        # Отключаем повторный клик во время инициализации
+        btn.clicked.disconnect()
+        self._on_download_click(release_id, release_name, torrent_id, btn)
 
-    async def _monitor_download(self, info_hash: str, btn: CircularProgressButton):
+    async def _monitor_download(self, info_hash: str, btn: CircularProgressButton, release_name: str):
         """Мониторинг прогресса загрузки в реальном времени"""
         try:
             logging.info(f"Начат мониторинг {info_hash}")
@@ -462,7 +576,7 @@ class DownloadModal(QWidget):
         return menu
 
     async def close_modal(self):
-        """Закрытие с остановкой мониторинга"""
+        """Закрытие с остановкой мониторинга и очисткой поиска"""
         # Отменяем все активные задачи мониторинга
         for info_hash, task in self._monitor_tasks.items():
             if not task.done():
@@ -485,6 +599,10 @@ class DownloadModal(QWidget):
         
         self.active_monitors.clear()
         self._monitor_tasks.clear()
+        
+        # Очищаем поиск при закрытии (как вы просили)
+        self.search_field.clear()
+        self.results.clear()
         
         # Анимация закрытия
         self.anim_group = QParallelAnimationGroup(self)

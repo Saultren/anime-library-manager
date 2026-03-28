@@ -192,11 +192,8 @@ class AnimeLibrary(QObject):
         # user agent (константа в модуле)
         self.user_agent = USER_AGENT
 
-        # Централизованное сохранение event loop
-        try:
-            self.loop = asyncio.get_event_loop()
-        except RuntimeError:
-            self.loop = None
+        # Event loop больше не храним в переменной класса, чтобы избежать проблем
+        # с разными потоками. Используем asyncio.get_running_loop() там, где нужно.
 
     # ---------------- директории ----------------
     def _setup_directories(self):
@@ -1237,15 +1234,21 @@ class LibraryScanner(QObject):
             raise Exception(f"HTTP {status}")
 
     def setup_torrent_manager(self, save_path: Optional[str] = None):
-        """Инициализировать менеджер загрузок"""
+        """Инициализировать менеджер загрузок (асинхронно)"""
         if save_path:
             self._torrent_save_path = Path(save_path).expanduser()
         
         if not self.torrent_manager:
+            # Передаем текущий running loop внутрь менеджера, если нужно
             self.torrent_manager = TorrentManager(
-                save_path=self._torrent_save_path,
-                loop=self.loop
+                save_path=self._torrent_save_path
             )
+    
+    async def ensure_torrent_session(self):
+        """Гарантировать, что сессия торрента запущена"""
+        if not self.torrent_manager:
+            self.setup_torrent_manager()
+        await self.torrent_manager.start_session()
 
     async def download_release(self, release_id: int, release_name: str, torrent_id: int) -> str:
         """Полный цикл загрузки релиза"""
@@ -1253,16 +1256,11 @@ class LibraryScanner(QObject):
             # Скачиваем .torrent файл
             torrent_path = await self.download_torrent_file(torrent_id, release_name)
             
-            # Инициализируем менеджер (если еще не создан)
-            if not self.torrent_manager:
-                self.setup_torrent_manager()
+            # Гарантируем запуск сессии
+            await self.ensure_torrent_session()
             
             # Добавляем торрент в сессию (теперь это асинхронный вызов)
             info_hash = await self.torrent_manager.add_torrent(Path(torrent_path), release_name)
-            
-            # Проверяем, не была ли загрузка добавлена ранее (дубликат)
-            if info_hash in self.torrent_manager.active_downloads:
-                logging.info(f"Загрузка уже существует: {info_hash}")
             
             # Эмитим сигнал о старте
             self.download_started.emit(release_id, info_hash)
