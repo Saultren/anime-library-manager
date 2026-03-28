@@ -15,7 +15,7 @@ import random
 import shutil
 from datetime import datetime
 from pathlib import Path
-from typing import List, Dict, Optional, Set
+from typing import List, Dict, Optional, Set, Tuple
 from dataclasses import dataclass
 from enum import Enum
 
@@ -24,6 +24,7 @@ from aiohttp import ClientError
 from PySide6.QtCore import QObject, Signal, QThread, QMetaObject, Qt, Q_ARG
 from PySide6.QtWidgets import QApplication
 import qasync  # Добавляем интеграцию asyncio с Qt
+from torrent_manager import TorrentManager, TorrentStatus
 
 # Настройка логирования
 def setup_logging():
@@ -170,6 +171,10 @@ class AnimeLibrary(QObject):
     metadata_loaded = Signal(str, dict)  # anime_id, metadata
     poster_loaded = Signal(str, str)  # anime_id, poster_path
     error_occurred = Signal(str, str)  # error_type, message
+    download_started = Signal(int, str)  # release_id, info_hash
+    download_progress = Signal(str, float, int)  # info_hash, progress, speed
+    download_completed = Signal(str)  # info_hash
+    download_error = Signal(str, str)  # release_id, error
     
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -179,15 +184,16 @@ class AnimeLibrary(QObject):
         self._async_workers: List[AsyncWorker] = []  # Для отслеживания активных workers
         self._setup_directories()
         self._metadata_lock = asyncio.Lock()  # для защиты от параллельных записей в кэш
-        
+        self.aniliberty_session = None
+
+        self.torrent_manager: Optional[TorrentManager] = None
+        self._torrent_save_path = Path("/mnt/Аниме").expanduser()
+
         # user agent (константа в модуле)
         self.user_agent = USER_AGENT
 
-        # Централизованное сохранение event loop
-        try:
-            self.loop = asyncio.get_event_loop()
-        except RuntimeError:
-            self.loop = None
+        # Event loop больше не храним в переменной класса, чтобы избежать проблем
+        # с разными потоками. Используем asyncio.get_running_loop() там, где нужно.
 
     # ---------------- директории ----------------
     def _setup_directories(self):
@@ -477,25 +483,36 @@ class AnimeLibrary(QObject):
             "X-Requested-With": "anime-manager"
         }
 
-    async def api_get(self, url: str, *, params: Optional[Dict] = None, as_json: bool = False, as_bytes: bool = False):
+    async def api_get(self, url: str, *, params: Optional[Dict] = None, as_json: bool = False, 
+                    as_bytes: bool = False, session: Optional[aiohttp.ClientSession] = None):
         """
         Универсальный GET с retry/backoff и применением headers.
+        Поддерживает как основную сессию (self._session), так и внешнюю (session).
+        
         Возвращает: (status:int, content) — content зависит от флагов:
             - as_json=True -> parsed JSON (обычно dict/list)
             - as_bytes=True -> raw bytes
             - иначе -> text (str)
+        
         retry: максимум 3 попытки (attempt 0,1,2)
-        Политика для 429: ждать 1.5-2.0 сек и пробовать снова (вариант B).
+        Политика для 429: ждать 1.5-2.0 сек и пробовать снова
         """
-        if not self._session or self._session.closed:
-            timeout = aiohttp.ClientTimeout(total=10)
-            self._session = aiohttp.ClientSession(timeout=timeout)
-            logging.debug("Создана новая HTTP-сессия")
+        # Выбираем, какую сессию использовать:
+        # 1. Если передали session — используем её
+        # 2. Иначе — основную self._session (создаём если нужно)
+        use_session = session
+        if use_session is None:
+            if not self._session or self._session.closed:
+                timeout = aiohttp.ClientTimeout(total=10)
+                self._session = aiohttp.ClientSession(timeout=timeout)
+                logging.debug("Создана новая HTTP-сессия (основная)")
+            use_session = self._session
 
         attempts = 3
         for attempt in range(attempts):
             try:
-                async with self._session.get(url, params=params, headers=self.api_headers()) as resp:
+                # Используем use_session вместо self._session
+                async with use_session.get(url, params=params, headers=self.api_headers()) as resp:
                     status = resp.status
 
                     # 429 -> ожидание и retry (если есть попытки)
@@ -508,7 +525,7 @@ class AnimeLibrary(QObject):
                         await asyncio.sleep(0.4 * (2 ** attempt) + random.random() * 0.2)
                         continue
 
-                    # Успешно или окончательная ошибка — вернуть тело
+                    # Успешно или окончательная ошибка — возвращаем тело
                     if as_json:
                         try:
                             data = await resp.json()
@@ -1169,6 +1186,104 @@ class LibraryScanner(QObject):
     def stop(self):
         """Остановка сканирования"""
         self._is_running = False
+
+    # ---------------- Aniliberty API -----------------
+    async def search_anilibria_releases(self, query: str) -> Tuple[int, List[Dict]]:
+        """Поиск релизов на Aniliberty"""
+        if not self.aniliberty_session or self.aniliberty_session.closed:
+            timeout = aiohttp.ClientTimeout(total=10)
+            self.aniliberty_session = aiohttp.ClientSession(timeout=timeout)
+            
+        url = "https://aniliberty.top/api/v1/app/search/releases"
+        params = {"query": query}
+        
+        status, data = await self.api_get(url, params=params, as_json=True, session=self.aniliberty_session)
+        return status, data
+
+    async def get_release_details(self, release_id: int) -> Tuple[int, Dict]:
+        """Получить детали релиза (включая торренты)"""
+        async with self._metadata_lock:
+            if not self.aniliberty_session or self.aniliberty_session.closed:
+                timeout = aiohttp.ClientTimeout(total=10)
+                self.aniliberty_session = aiohttp.ClientSession(timeout=timeout)
+            
+            url = f"https://aniliberty.top/api/v1/anime/releases/{release_id}"
+            status, data = await self.api_get(url, as_json=True, session=self.aniliberty_session)
+            await asyncio.sleep(0.25)  # Rate limit
+            return status, data
+
+    async def download_torrent_file(self, torrent_id: int, release_name: str) -> str:
+        """Скачать .torrent файл в кэш"""
+        cache_dir = Path("~/.cache/anime-manager/torrents").expanduser()
+        cache_dir.mkdir(parents=True, exist_ok=True)
+        
+        filename = f"{release_name}_{torrent_id}.torrent"
+        file_path = cache_dir / filename
+        
+        if file_path.exists():
+            return str(file_path)
+        
+        url = f"https://aniliberty.top/api/v1/anime/torrents/{torrent_id}/file"
+        status, content = await self.api_get(url, as_bytes=True, session=self.aniliberty_session)
+        
+        if status == 200 and content:
+            async with aiofiles.open(file_path, 'wb') as f:
+                await f.write(content)
+            return str(file_path)
+        else:
+            raise Exception(f"HTTP {status}")
+
+    def setup_torrent_manager(self, save_path: Optional[str] = None):
+        """Инициализировать менеджер загрузок (только создание объекта)"""
+        if save_path:
+            self._torrent_save_path = Path(save_path).expanduser()
+        
+        if not self.torrent_manager:
+            self.torrent_manager = TorrentManager(
+                save_path=self._torrent_save_path
+            )
+
+    async def ensure_torrent_manager_started(self):
+        """Гарантировать запуск менеджера (вызывать перед первой загрузкой)"""
+        if not self.torrent_manager:
+            self.setup_torrent_manager()
+        
+        # Если сессия еще не запущена - запускаем
+        if not hasattr(self.torrent_manager, 'session') or not self.torrent_manager.session:
+            await self.torrent_manager.start()
+
+    async def download_release(self, release_id: int, release_name: str, torrent_id: int) -> str:
+        """Полный цикл загрузки релиза"""
+        try:
+            # Гарантируем запуск менеджера
+            await self.ensure_torrent_manager_started()
+            
+            # Скачиваем .torrent
+            torrent_path = await self.download_torrent_file(torrent_id, release_name)
+            
+            # Добавляем в менеджер (теперь возвращает просто info_hash)
+            info_hash = await self.torrent_manager.add_torrent(Path(torrent_path), release_name)
+            
+            # Эмитим сигнал
+            self.download_started.emit(release_id, info_hash)
+            
+            return info_hash
+            
+        except Exception as e:
+            self.download_error.emit(str(release_id), str(e))
+            raise
+            self.download_started.emit(release_id, info_hash)
+            
+            if already_exists:
+                logging.info(f"Торрент уже загружался ранее: {info_hash}")
+            
+            return info_hash
+            
+        except Exception as e:
+            logging.error(f"Ошибка при загрузке релиза {release_id}: {e}")
+            self.download_error.emit(str(release_id), str(e))
+            raise
+    # --------------------------------------------
 
 
 # Глобальный обработчик исключений
