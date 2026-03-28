@@ -1,10 +1,10 @@
 import os
 import asyncio
 import logging
+import pickle
 from pathlib import Path
 from typing import Dict, Optional, List
 from dataclasses import dataclass
-
 import libtorrent as lt
 
 @dataclass
@@ -25,25 +25,50 @@ class TorrentStatus:
     error: Optional[str] = None
 
 class TorrentManager:
-    """Управление торрент-загрузками через libtorrent (потокобезопасная версия)"""
+    """Управление торрент-загрузками через libtorrent (Потокобезопасный + Resume)"""
     
-    def __init__(self, save_path: Path, loop: asyncio.AbstractEventLoop):
+    def __init__(self, save_path: Path, loop: Optional[asyncio.AbstractEventLoop] = None):
         self.save_path = Path(save_path).expanduser().resolve()
         self.save_path.mkdir(parents=True, exist_ok=True)
-        self.loop = loop
+        self.loop = loop or asyncio.get_running_loop()
         
-        # Все операции с session будут выполняться в этом выделенном потоке
-        self._session: Optional[lt.session] = None
+        # Пути для сохранения состояния
+        self.state_dir = self.save_path.parent / ".torrent_state"
+        self.state_dir.mkdir(parents=True, exist_ok=True)
+        self.resume_file = self.state_dir / "resume_data"
+        self.session_file = self.state_dir / "session_state"
+        
+        # Инициализация сессии (будет выполнена в потоке)
+        self.session: Optional[lt.session] = None
         self._active_downloads: Dict[str, lt.torrent_handle] = {}
-        
-        # Инициализируем сессию в отдельном потоке
-        self._init_session()
+        self._shutdown_event = asyncio.Event()
+        self._autosave_task: Optional[asyncio.Task] = None
         
         logging.info(f"TorrentManager инициализирован: {self.save_path}")
 
-    def _init_session(self):
-        """Инициализация сессии в текущем потоке"""
-        self._session = lt.session({'listen_interfaces': '0.0.0.0:6881'})
+    async def start(self):
+        """Асинхронный запуск сессии в отдельном потоке"""
+        try:
+            # Запускаем инициализацию в потоке
+            self.session = await asyncio.to_thread(self._create_session)
+            
+            # Восстанавливаем состояние
+            await self._load_session_state()
+            
+            # Запускаем автосохранение
+            self._autosave_task = asyncio.create_task(self._autosave_loop())
+            
+            logging.info("TorrentManager запущен успешно")
+        except Exception as e:
+            logging.error(f"Ошибка запуска TorrentManager: {e}")
+            # Попытка запуска в безопасном режиме (без DHT/PEX если порт занят)
+            logging.warning("Попытка запуска в безопасном режиме...")
+            self.session = await asyncio.to_thread(self._create_session_safe)
+            self._autosave_task = asyncio.create_task(self._autosave_loop())
+
+    def _create_session(self) -> lt.session:
+        """Создание сессии (вызывается в потоке)"""
+        session = lt.session({'listen_interfaces': '0.0.0.0:6881'})
         settings = {
             'user_agent': 'AnimeLibrary/1.0',
             'announce_to_all_trackers': True,
@@ -52,50 +77,128 @@ class TorrentManager:
             'upload_rate_limit': 0,
             'download_rate_limit': 0,
             'stop_tracker_timeout': 5,
+            'save_resume_data_interval': 60,
         }
-        self._session.apply_settings(settings)
+        session.apply_settings(settings)
+        return session
+
+    def _create_session_safe(self) -> lt.session:
+        """Безопасное создание сессии (случайный порт)"""
+        import random
+        port = random.randint(10000, 20000)
+        session = lt.session({'listen_interfaces': f'0.0.0.0:{port}'})
+        settings = {
+            'user_agent': 'AnimeLibrary/1.0',
+            'dht': False,
+            'pex': False,
+            'lsd': False,
+            'announce_to_all_trackers': True,
+            'connections_limit': 50,
+        }
+        session.apply_settings(settings)
+        return session
+
+    async def _load_session_state(self):
+        """Восстановление сессии и загрузок из файлов"""
+        if not self.session:
+            return
+
+        try:
+            if self.resume_file.exists():
+                logging.info("Загрузка resume-данных...")
+                data = await asyncio.to_thread(lambda: self.resume_file.read_bytes())
+                resume_data = pickle.loads(data)
+                
+                for info_hash, params in resume_data.items():
+                    try:
+                        handle = await asyncio.to_thread(self.session.add_torrent, params)
+                        self._active_downloads[info_hash] = handle
+                        logging.info(f"Восстановлен торрент: {info_hash}")
+                    except Exception as e:
+                        logging.warning(f"Не удалось восстановить {info_hash}: {e}")
+            else:
+                logging.info("Resume-данные не найдены, начинаем с чистого листа")
+                
+        except Exception as e:
+            logging.error(f"Ошибка восстановления сессии: {e}")
+
+    async def _autosave_loop(self):
+        """Фоновый цикл автосохранения каждые 30 секунд"""
+        while not self._shutdown_event.is_set():
+            try:
+                await asyncio.sleep(30)
+                await self._save_state()
+                logging.debug("Автосохранение состояния выполнено")
+            except asyncio.CancelledError:
+                break
+            except Exception as e:
+                logging.error(f"Ошибка автосохранения: {e}")
+
+    async def _save_state(self):
+        """Сохранение текущего состояния сессии и загрузок"""
+        if not self.session:
+            return
+
+        try:
+            resume_data = {}
+            handles = await asyncio.to_thread(self.session.get_torrents)
+            
+            for handle in handles:
+                if handle.is_valid():
+                    try:
+                        info = await asyncio.to_thread(handle.torrent_file)
+                        if info:
+                            params = {
+                                'ti': info,
+                                'save_path': str(handle.save_path()),
+                                'flags': handle.flags(),
+                            }
+                            resume_data[str(info.info_hash())] = params
+                    except Exception as e:
+                        logging.warning(f"Не удалось получить resume для торрента: {e}")
+
+            if resume_data:
+                await asyncio.to_thread(lambda: self.resume_file.write_bytes(pickle.dumps(resume_data)))
+            
+            session_state = await asyncio.to_thread(self.session.save_state)
+            await asyncio.to_thread(lambda: self.session_file.write_bytes(session_state))
+            
+        except Exception as e:
+            logging.error(f"Критическая ошибка сохранения состояния: {e}")
 
     async def add_torrent(self, torrent_file: Path, release_name: str) -> str:
-        """Добавить .torrent файл в сессию (асинхронно)"""
-        return await asyncio.to_thread(self._add_torrent_sync, torrent_file, release_name)
+        """Добавить .torrent файл в сессию (Асинхронно)"""
+        if not self.session:
+            raise RuntimeError("Сессия не инициализирована")
 
-    def _add_torrent_sync(self, torrent_file: Path, release_name: str) -> str:
-        """Синхронная версия добавления торрента (вызывается в отдельном потоке)"""
         try:
-            # Читаем торрент
-            with open(torrent_file, 'rb') as f:
-                torrent_data = lt.bdecode(f.read())
+            torrent_data = await asyncio.to_thread(lambda: torrent_file.read_bytes())
+            info = await asyncio.to_thread(lambda: lt.torrent_info(lt.bdecode(torrent_data)))
+            info_hash = str(info.info_hash())
             
-            info = lt.torrent_info(torrent_data)
-            
-            # FIX: Корректное получение info_hash для libtorrent 2.x
-            try:
-                info_hash = info.info_hash().to_string().hex()
-            except AttributeError:
-                # Для старых версий libtorrent
-                info_hash = str(info.info_hash())
-            
-            # Проверяем, не качаем ли уже
             if info_hash in self._active_downloads:
-                logging.info(f"Торрент уже активен: {info_hash}")
-                return info_hash
+                handle = self._active_downloads[info_hash]
+                if handle.is_valid():
+                    logging.info(f"Торрент уже активен: {info_hash}")
+                    return info_hash
             
-            # Создаем подпапку для релиза, чтобы файлы не сваливались в кучу
             release_save_path = self.save_path / release_name
             release_save_path.mkdir(parents=True, exist_ok=True)
-            
-            # Параметры загрузки
+
             params = {
                 'ti': info,
                 'save_path': str(release_save_path),
                 'storage_mode': lt.storage_mode_t.storage_mode_sparse,
+                'flags': lt.torrent_flags.normal,
             }
             
-            handle = self._session.add_torrent(params)
-            handle.set_sequential_download(True)  # Для видео
+            handle = await asyncio.to_thread(self.session.add_torrent, params)
+            await asyncio.to_thread(handle.set_sequential_download, True)
             
             self._active_downloads[info_hash] = handle
             logging.info(f"Добавлен торрент: {info_hash} → {release_save_path}")
+            
+            await self._save_state()
             
             return info_hash
             
@@ -104,27 +207,28 @@ class TorrentManager:
             raise
 
     async def get_status(self, info_hash: str) -> Optional[TorrentStatus]:
-        """Получить текущий статус загрузки (асинхронно)"""
-        return await asyncio.to_thread(self._get_status_sync, info_hash)
-
-    def _get_status_sync(self, info_hash: str) -> Optional[TorrentStatus]:
-        """Синхронная версия получения статуса"""
+        """Получить текущий статус загрузки (Асинхронно)"""
         if info_hash not in self._active_downloads:
             return None
             
         handle = self._active_downloads[info_hash]
-        status = handle.status()
+        if not handle.is_valid():
+            return None
+
+        status = await asyncio.to_thread(handle.status)
         
-        # Определяем состояние
         state_map = {
             lt.torrent_status.checking_resume_data: "checking",
             lt.torrent_status.checking_files: "checking",
-            lt.torrent_status.downloading_metadata: "downloading",
+            lt.torrent_status.downloading_metadata: "downloading_meta",
             lt.torrent_status.downloading: "downloading",
             lt.torrent_status.finished: "finished",
             lt.torrent_status.seeding: "seeding",
+            lt.torrent_status.paused: "paused",
         }
         state = state_map.get(status.state, "unknown")
+        
+        error_msg = status.error if status.error else None
         
         return TorrentStatus(
             info_hash=info_hash,
@@ -139,76 +243,77 @@ class TorrentManager:
             num_seeds=status.num_seeds,
             is_finished=status.is_finished,
             save_path=handle.save_path(),
-            error=status.error if status.error else None
+            error=error_msg
         )
 
     async def pause_download(self, info_hash: str):
-        """Пауза загрузки (асинхронно)"""
-        await asyncio.to_thread(self._pause_download_sync, info_hash)
-
-    def _pause_download_sync(self, info_hash: str):
-        """Синхронная версия паузы"""
-        if info_hash in self._active_downloads:
-            self._active_downloads[info_hash].pause()
-            logging.info(f"Пауза: {info_hash}")
-
-    async def resume_download(self, info_hash: str):
-        """Возобновить загрузку (асинхронно)"""
-        await asyncio.to_thread(self._resume_download_sync, info_hash)
-
-    def _resume_download_sync(self, info_hash: str):
-        """Синхронная версия возобновления"""
-        if info_hash in self._active_downloads:
-            self._active_downloads[info_hash].resume()
-            logging.info(f"Возобновлено: {info_hash}")
-
-    async def remove_download(self, info_hash: str, delete_files: bool = False):
-        """Удалить загрузку из сессии (асинхронно)"""
-        await asyncio.to_thread(self._remove_download_sync, info_hash, delete_files)
-
-    def _remove_download_sync(self, info_hash: str, delete_files: bool = False):
-        """Синхронная версия удаления"""
+        """Пауза загрузки"""
         if info_hash in self._active_downloads:
             handle = self._active_downloads[info_hash]
+            if handle.is_valid():
+                await asyncio.to_thread(handle.pause)
+                logging.info(f"Пауза: {info_hash}")
+                await self._save_state()
+
+    async def resume_download(self, info_hash: str):
+        """Возобновить загрузку"""
+        if info_hash in self._active_downloads:
+            handle = self._active_downloads[info_hash]
+            if handle.is_valid():
+                await asyncio.to_thread(handle.resume)
+                logging.info(f"Возобновлено: {info_hash}")
+
+    async def remove_download(self, info_hash: str, delete_files: bool = False):
+        """Удалить загрузку из сессии"""
+        if info_hash not in self._active_downloads:
+            return
             
-            if delete_files:
-                import shutil
+        handle = self._active_downloads.pop(info_hash)
+        if not handle.is_valid():
+            return
+
+        if delete_files:
+            try:
                 save_path = Path(handle.save_path())
                 if save_path.exists():
-                    shutil.rmtree(save_path)
+                    import shutil
+                    await asyncio.to_thread(lambda: shutil.rmtree(save_path))
                     logging.info(f"Удалены файлы: {save_path}")
-            
-            self._session.remove_torrent(handle)
-            del self._active_downloads[info_hash]
-            logging.info(f"Удален торрент: {info_hash}")
+            except Exception as e:
+                logging.error(f"Ошибка удаления файлов: {e}")
+        
+        await asyncio.to_thread(self.session.remove_torrent, handle)
+        logging.info(f"Удален торрент: {info_hash}")
+        await self._save_state()
 
     async def get_all_statuses(self) -> List[TorrentStatus]:
-        """Получить статус всех активных загрузок (асинхронно)"""
-        return await asyncio.to_thread(self._get_all_statuses_sync)
-
-    def _get_all_statuses_sync(self) -> List[TorrentStatus]:
-        """Синхронная версия получения всех статусов"""
+        """Получить статус всех активных загрузок"""
         statuses = []
-        for ih in self._active_downloads:
-            status = self._get_status_sync(ih)
+        for ih in list(self._active_downloads.keys()):
+            status = await self.get_status(ih)
             if status:
                 statuses.append(status)
         return statuses
 
     async def shutdown(self):
-        """Корректное завершение (асинхронно)"""
-        await asyncio.to_thread(self._shutdown_sync)
-
-    def _shutdown_sync(self):
-        """Синхронная версия завершения"""
+        """Корректное завершение работы"""
         logging.info("Остановка TorrentManager...")
-        for handle in self._active_downloads.values():
-            handle.pause()
-        if self._session:
-            self._session.pause()
-        logging.info("TorrentManager остановлен")
-
-    @property
-    def active_downloads(self) -> Dict[str, lt.torrent_handle]:
-        """Возвращает словарь активных загрузок (только для чтения, без блокировок)"""
-        return self._active_downloads.copy()
+        
+        self._shutdown_event.set()
+        if self._autosave_task:
+            self._autosave_task.cancel()
+            try:
+                await self._autosave_task
+            except asyncio.CancelledError:
+                pass
+        
+        await self._save_state()
+        
+        if self.session:
+            handles = await asyncio.to_thread(self.session.get_torrents)
+            for handle in handles:
+                if handle.is_valid():
+                    await asyncio.to_thread(handle.pause)
+            
+            await asyncio.to_thread(self.session.pause)
+            logging.info("TorrentManager остановлен")

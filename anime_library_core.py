@@ -1234,36 +1234,48 @@ class LibraryScanner(QObject):
             raise Exception(f"HTTP {status}")
 
     def setup_torrent_manager(self, save_path: Optional[str] = None):
-        """Инициализировать менеджер загрузок (асинхронно)"""
+        """Инициализировать менеджер загрузок (только создание объекта)"""
         if save_path:
             self._torrent_save_path = Path(save_path).expanduser()
         
         if not self.torrent_manager:
-            # Передаем текущий running loop внутрь менеджера, если нужно
             self.torrent_manager = TorrentManager(
                 save_path=self._torrent_save_path
             )
-    
-    async def ensure_torrent_session(self):
-        """Гарантировать, что сессия торрента запущена"""
+
+    async def ensure_torrent_manager_started(self):
+        """Гарантировать запуск менеджера (вызывать перед первой загрузкой)"""
         if not self.torrent_manager:
             self.setup_torrent_manager()
-        await self.torrent_manager.start_session()
+        
+        # Если сессия еще не запущена - запускаем
+        if not hasattr(self.torrent_manager, 'session') or not self.torrent_manager.session:
+            await self.torrent_manager.start()
 
     async def download_release(self, release_id: int, release_name: str, torrent_id: int) -> str:
         """Полный цикл загрузки релиза"""
         try:
-            # Скачиваем .torrent файл
+            # Гарантируем запуск менеджера
+            await self.ensure_torrent_manager_started()
+            
+            # Скачиваем .torrent
             torrent_path = await self.download_torrent_file(torrent_id, release_name)
             
-            # Гарантируем запуск сессии
-            await self.ensure_torrent_session()
-            
-            # Добавляем торрент в сессию (теперь это асинхронный вызов)
+            # Добавляем в менеджер (теперь возвращает просто info_hash)
             info_hash = await self.torrent_manager.add_torrent(Path(torrent_path), release_name)
             
-            # Эмитим сигнал о старте
+            # Эмитим сигнал
             self.download_started.emit(release_id, info_hash)
+            
+            return info_hash
+            
+        except Exception as e:
+            self.download_error.emit(str(release_id), str(e))
+            raise
+            self.download_started.emit(release_id, info_hash)
+            
+            if already_exists:
+                logging.info(f"Торрент уже загружался ранее: {info_hash}")
             
             return info_hash
             
