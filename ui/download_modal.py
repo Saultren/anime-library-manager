@@ -264,9 +264,17 @@ class DownloadModal(QWidget):
         layout.addLayout(info_layout)
         layout.addStretch()
 
-        # Правая часть: кнопка с прогрессом (уже существующая)
+        # Правая часть: кнопка с прогрессом и кнопка отмены
         btn.setFixedSize(40, 40)
         layout.addWidget(btn)
+        
+        # Кнопка отмены загрузки
+        cancel_btn = QPushButton("✕")
+        cancel_btn.setObjectName("cancelDownloadBtn")
+        cancel_btn.setFixedSize(30, 30)
+        cancel_btn.setToolTip("Отменить загрузку")
+        cancel_btn.clicked.connect(lambda checked, ih=info_hash: self._on_cancel_download(ih))
+        layout.addWidget(cancel_btn)
 
         return container
 
@@ -275,16 +283,14 @@ class DownloadModal(QWidget):
         # Если текст пустой и есть активные загрузки - показываем их
         if not text.strip() and self.active_monitors:
             self._show_downloads_view()
-        # Если текст введен - скрываем загрузки (но не ищем автоматически)
+        # Если текст введен - переключаемся в режим поиска
         elif text.strip():
-            self.current_mode = "search"
-            # Скрываем загрузки, но оставляем результаты поиска если они были
-            if self.results_container.isVisible():
-                pass  # Результаты остаются видимыми
+            self._current_mode = "search"
+            # Показываем результаты если они есть, иначе подсказку
+            if self.results:
+                self._render_results()
             else:
-                # Если результатов нет, показываем подсказку
-                if not self.results:
-                    self._show_no_results("Введите название для поиска")
+                self._show_no_results("Введите название для поиска")
 
     def on_search(self):
         # Если мы в режиме загрузок, переключаемся обратно в поиск
@@ -457,8 +463,16 @@ class DownloadModal(QWidget):
         release_name = release['name']['main']
         torrents = release.get('torrents', [])
         
+        # Проверяем, загружается ли уже этот релиз (по имени)
+        is_downloading = False
+        downloading_info_hash = None
+        for ih, btn_existing in self.active_monitors.items():
+            if btn_existing.property("release_name") == release_name:
+                is_downloading = True
+                downloading_info_hash = ih
+                break
+        
         # Сортируем торренты: сначала лучшее качество, потом меньший размер
-        # Словарь приоритетов для сортировки качеств (чем меньше число, тем выше приоритет)
         quality_priority = {
             "8k": 0, "4k": 1, "2k": 2, "1080p": 3, 
             "720p": 4, "576p": 5, "480p": 6, "360p": 7
@@ -480,7 +494,13 @@ class DownloadModal(QWidget):
         # Сохраняем кнопку
         self.download_widgets[release_id] = btn
 
-        if len(sorted_torrents) > 1:
+        if is_downloading:
+            # Релиз уже загружается - показываем кнопку перехода к загрузкам
+            btn.setText("⏳")
+            btn.setToolTip("Уже загружается (нажмите для просмотра)")
+            btn.clicked.connect(lambda: self._show_downloads_view())
+            btn.setEnabled(True)
+        elif len(sorted_torrents) > 1:
             # Создаем меню с вариантами
             menu = self._create_torrent_menu(release, btn, sorted_torrents)
             
@@ -619,6 +639,33 @@ class DownloadModal(QWidget):
                 del self._monitor_tasks[info_hash]
             logging.info(f"Мониторинг завершён {info_hash}")
 
+    def _on_cancel_download(self, info_hash: str):
+        """Обработчик нажатия кнопки отмены загрузки"""
+        async def cancel_and_cleanup():
+            try:
+                # Удаляем торрент из сессии (без удаления файлов)
+                await self.library.torrent_manager.remove_download(info_hash, delete_files=False)
+                
+                # Находим и удаляем кнопку из active_monitors
+                if info_hash in self.active_monitors:
+                    btn = self.active_monitors.pop(info_hash)
+                    btn.stop_progress()
+                    btn.setText("⬇️")  # Возвращаем иконку загрузки
+                    btn.setEnabled(True)
+                
+                # Обновляем UI
+                if self._current_mode == "downloads":
+                    self._render_active_downloads()
+                
+                # Если больше нет загрузок, переключаемся на поиск
+                if not self.active_monitors:
+                    self._show_search_view()
+                    
+            except Exception as e:
+                logging.error(f"Ошибка отмены загрузки: {e}")
+        
+        self.library._start_async_operation(cancel_and_cleanup)
+
     def mousePressEvent(self, event):
         """Закрытие только при клике за пределами центрального блока"""
         # Проверяем, находится ли клик внутри center_block
@@ -664,19 +711,17 @@ class DownloadModal(QWidget):
         if self._monitor_tasks:
             await asyncio.gather(*self._monitor_tasks.values(), return_exceptions=True)
         
-        # Останавливаем все активные загрузки (пауза) - теперь это асинхронный вызов
+        # Останавливаем прогресс-индикаторы, но НЕ удаляем из active_monitors
+        # Торренты продолжают качаться в фоне
         if self.library.torrent_manager:
-            pause_tasks = []
             for info_hash, btn in self.active_monitors.items():
                 btn.setEnabled(True)
                 btn.stop_progress()
-                pause_tasks.append(self.library.torrent_manager.pause_download(info_hash))
-            
-            if pause_tasks:
-                await asyncio.gather(*pause_tasks, return_exceptions=True)
         
-        self.active_monitors.clear()
+        # Не очищаем active_monitors и _monitor_tasks полностью!
+        # Сохраняем info_hash'и для восстановления при следующем открытии
         self._monitor_tasks.clear()
+        # active_monitors оставляем как есть - он содержит ссылки на кнопки
         
         # Очищаем поиск при закрытии (как вы просили)
         self.search_field.clear()
