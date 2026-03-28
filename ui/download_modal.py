@@ -163,8 +163,33 @@ class DownloadModal(QWidget):
         close_btn.clicked.connect(lambda: asyncio.ensure_future(self.close_modal()))
         main_layout.addWidget(close_btn, alignment=Qt.AlignCenter)
 
+        # Переключатели режимов (поиск / загрузки)
+        self.mode_switcher = QHBoxLayout()
+        self.mode_switcher.setSpacing(10)
+        
+        self.btn_mode_search = QPushButton("🔍 Поиск")
+        self.btn_mode_search.setObjectName("watchButton")
+        self.btn_mode_search.setFixedHeight(35)
+        self.btn_mode_search.clicked.connect(self._switch_to_search_mode)
+        
+        self.btn_mode_downloads = QPushButton("📥 Загрузки")
+        self.btn_mode_downloads.setObjectName("watchButton")
+        self.btn_mode_downloads.setFixedHeight(35)
+        self.btn_mode_downloads.clicked.connect(self._switch_to_downloads_mode)
+        
+        self.mode_switcher.addWidget(self.btn_mode_search)
+        self.mode_switcher.addWidget(self.btn_mode_downloads)
+        self.mode_switcher.addStretch()
+        
+        self.mode_switcher_widget = QWidget()
+        self.mode_switcher_widget.setLayout(self.mode_switcher)
+        self.mode_switcher_widget.hide()  # Скрыт по умолчанию, покажем если есть загрузки
+        
+        main_layout.addWidget(self.mode_switcher_widget)
+
         # Инициализация: показываем поиск или активные загрузки
-        self._switch_to_search_mode()
+        self._current_mode = "search"
+        self._check_active_downloads()
 
     def _clear_results_layout(self):
         """Очистить layout полностью безопасно"""
@@ -176,19 +201,40 @@ class DownloadModal(QWidget):
                 except RuntimeError:
                     pass
 
+    def _check_active_downloads(self):
+        """Проверить наличие активных загрузок и показать переключатели если нужно"""
+        if self.active_monitors:
+            # Есть активные загрузки - показываем переключатели
+            self.mode_switcher_widget.show()
+            # Если мы в режиме поиска, но есть загрузки - ничего не делаем, пользователь сам переключится
+            # Если загрузок нет - остаемся в режиме поиска
+        else:
+            # Нет активных загрузок - скрываем переключатели и остаемся в поиске
+            self.mode_switcher_widget.hide()
+            if self._current_mode == "downloads":
+                self._switch_to_search_mode()
+
     def _switch_to_search_mode(self):
         """Переключиться в режим поиска"""
         self._current_mode = "search"
         self.title_label.setText("Поиск и загрузка аниме")
         self.search_field.show()
-        self.search_field.clear()
-        self._show_no_results("Начните поиск по Aniliberty")
+        self.btn_mode_search.setEnabled(False)
+        self.btn_mode_downloads.setEnabled(True)
+        
+        # Если есть результаты - показываем их, иначе приветственное сообщение
+        if self.results:
+            self._render_results()
+        else:
+            self._show_no_results("Начните поиск по Aniliberty")
 
     def _switch_to_downloads_mode(self):
         """Переключиться в режим активных загрузок"""
         self._current_mode = "downloads"
         self.title_label.setText("Активные загрузки")
         self.search_field.hide()
+        self.btn_mode_search.setEnabled(True)
+        self.btn_mode_downloads.setEnabled(False)
         self._render_active_downloads()
 
     def _show_no_results(self, message: str):
@@ -255,6 +301,10 @@ class DownloadModal(QWidget):
         return container
 
     def on_search(self):
+        # Если мы в режиме загрузок, переключаемся обратно в поиск
+        if self._current_mode == "downloads":
+            self._switch_to_search_mode()
+        
         query = self.search_field.text().strip()
         if not query:
             return
@@ -517,6 +567,11 @@ class DownloadModal(QWidget):
                     btn.stop_progress()
                     btn.setText("✅")
                     btn.setEnabled(False)
+                    
+                    # Обновляем UI списка загрузок если мы в режиме загрузок
+                    if self._current_mode == "downloads":
+                        self._render_active_downloads()
+                    
                     self.download_completed.emit(info_hash)
                     break
                 elif status.error:
@@ -524,6 +579,11 @@ class DownloadModal(QWidget):
                     btn.stop_progress()
                     btn.setText("❌")
                     btn.setEnabled(True)
+                    
+                    # Обновляем UI списка загрузок если мы в режиме загрузок
+                    if self._current_mode == "downloads":
+                        self._render_active_downloads()
+                    
                     break
 
                 await asyncio.sleep(0.5)
@@ -603,6 +663,9 @@ class DownloadModal(QWidget):
         # Очищаем поиск при закрытии (как вы просили)
         self.search_field.clear()
         self.results.clear()
+        
+        # Сбрасываем режим в поиск для следующего открытия
+        self._current_mode = "search"
         
         # Анимация закрытия
         self.anim_group = QParallelAnimationGroup(self)
