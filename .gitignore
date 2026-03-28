@@ -1,38 +1,46 @@
-```
-# Python
-__pycache__/
-*.pyc
-*.pyo
-*.pyd
+# Examples
+## Project with artifacts:
+Added files: ['pycache/main.cpython-310.pyc', 'dist/app.js', '.env.local', '.vscode/settings.json']
+Deleted files: []
+Modified files: []
+Current .gitignore: '*.log'
 
+```
+# Compiled and build artifacts
+*.pyc
+__pycache__/
+*.o
+*.obj
+dist/
+build/
 # Dependencies
 .venv/
 venv/
-env/
+node_modules/
+# Logs and temp files
+*.log
+*.tmp
+*.swp
+# Environment
 .env
 .env.local
 .env.*
-
-# Build artifacts
-build/
-dist/
-*.egg-info/
-
 # Editors
 .vscode/
 .idea/
-*.swp
-*.swo
-
-# Logs
-*.log
-
-# Coverage
-.coverage
-coverage/
-htmlcov/
-
-# Temp files
-*.tmp
-*.temp
 ```
+
+## Simple source code changes:
+Added files: ['src/main.py', 'README.md', 'config.json']
+Deleted files: ['old/unused.py']
+Modified files: ['utils.py']
+Current .gitignore: (empty)
+
+(empty - no output)
+
+## Current case:
+Added files: []
+Deleted files: []
+Modified files: ['ui/styles.qss']
+
+(empty - no output)
