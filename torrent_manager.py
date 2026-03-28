@@ -110,8 +110,18 @@ class TorrentManager:
                 data = await asyncio.to_thread(lambda: self.resume_file.read_bytes())
                 resume_data = pickle.loads(data)
                 
-                for info_hash, params in resume_data.items():
+                for info_hash, torrent_info_dict in resume_data.items():
                     try:
+                        # Восстанавливаем torrent_info из сохраненных данных
+                        torrent_bytes = torrent_info_dict['torrent_data']
+                        save_path = torrent_info_dict['save_path']
+                        
+                        info = lt.torrent_info(lt.bdecode(torrent_bytes))
+                        
+                        params = lt.add_torrent_params()
+                        params.ti = info
+                        params.save_path = save_path
+                        
                         handle = await asyncio.to_thread(self.session.add_torrent, params)
                         self._active_downloads[info_hash] = handle
                         logging.info(f"Восстановлен торрент: {info_hash}")
@@ -149,22 +159,26 @@ class TorrentManager:
                     try:
                         info = await asyncio.to_thread(handle.torrent_file)
                         if info:
-                            params = {
-                                'ti': info,
+                            # В libtorrent 2.x используем create_torrent для получения полного .torrent dict
+                            ct = lt.create_torrent(info)
+                            torrent_dict = ct.generate()
+                            torrent_bytes = lt.bencode(torrent_dict)
+                            
+                            resume_data[str(handle.info_hash())] = {
+                                'torrent_data': torrent_bytes,
                                 'save_path': str(handle.save_path()),
-                                'flags': handle.flags(),
                             }
-                            resume_data[str(info.info_hash())] = params
                     except Exception as e:
                         logging.warning(f"Не удалось получить resume для торрента: {e}")
 
             if resume_data:
                 await asyncio.to_thread(lambda: self.resume_file.write_bytes(pickle.dumps(resume_data)))
             
+            # save_state() в libtorrent 2.x возвращает dict, который нужно закодировать через bencode
             session_state = await asyncio.to_thread(self.session.save_state)
-
-            encoded_state = await asyncio.to_thread(lambda: lt.bencode(session_state))
-            await asyncio.to_thread(lambda: self.session_file.write_bytes(encoded_state))
+            # Кодируем dict в bytes через bencode
+            state_bytes = await asyncio.to_thread(lambda: lt.bencode(session_state))
+            await asyncio.to_thread(lambda: self.session_file.write_bytes(state_bytes))
             
         except Exception as e:
             logging.error(f"Критическая ошибка сохранения состояния: {e}")
