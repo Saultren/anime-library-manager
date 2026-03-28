@@ -245,3 +245,66 @@ QLabel#statusLabel {
     font-size: 12px;
     padding: 4px 8px;
 }
+
+/* ==================== ЭЛЕМЕНТЫ ЗАГРУЗОК ==================== */
+
+#downloadItem {
+    background-color: #252525;
+    border-radius: 12px;
+    border: 1px solid #333333;
+}
+
+#downloadTitle {
+    color: #ffffff;
+    font-size: 15px;
+    font-weight: 600;
+}
+
+#downloadMeta {
+    color: #909090;
+    font-size: 12px;
+}
+
+#cancelDownloadBtn {
+    background-color: transparent;
+    border: 1px solid #555555;
+    border-radius: 6px;
+    color: #aaaaaa;
+    font-size: 16px;
+    font-weight: bold;
+}
+
+#cancelDownloadBtn:hover {
+    background-color: #ff5252;
+    border-color: #ff5252;
+    color: #ffffff;
+}
+
+#cancelDownloadBtn:pressed {
+    background-color: #d32f2f;
+    border-color: #d32f2f;
+}
+
+/* ==================== МЕНЮ ТОРРЕНТОВ ==================== */
+
+#torrentMenu {
+    background-color: #2a2a2a;
+    border: 1px solid #404040;
+    border-radius: 8px;
+    padding: 4px;
+}
+
+#torrentMenu::item {
+    background-color: transparent;
+    padding: 8px 16px;
+    border-radius: 4px;
+    margin: 2px;
+}
+
+#torrentMenu::item:selected {
+    background-color: #3a3a3a;
+}
+
+#torrentMenu::item:hover {
+    background-color: #404040;
+}
