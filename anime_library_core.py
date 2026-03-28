@@ -518,10 +518,11 @@ class AnimeLibrary(QObject):
 
     # ---------------- API layer -----------------
     def api_headers(self) -> dict:
-        """Централизованные заголовки для всех запросов к Shikimori"""
+        """Централизованные заголовки для всех запросов к API"""
         return {
             "User-Agent": self.user_agent,
-            "X-Requested-With": "anime-manager"
+            "X-Requested-With": "anime-manager",
+            "Accept": "application/json"
         }
 
     async def api_get(self, url: str, *, params: Optional[Dict] = None, as_json: bool = False, 
@@ -544,7 +545,11 @@ class AnimeLibrary(QObject):
         use_session = session
         if use_session is None:
             if not self._session or self._session.closed:
-                timeout = aiohttp.ClientTimeout(total=10)
+                # Очень большие таймауты для медленных соединений
+                # total=120s - общий таймаут на весь запрос
+                # connect=30s - время на подключение + DNS + SSL handshake
+                # sock_read=90s - время на чтение ответа (между пакетами)
+                timeout = aiohttp.ClientTimeout(total=120, connect=30, sock_read=90)
                 self._session = aiohttp.ClientSession(timeout=timeout)
                 logging.debug("Создана новая HTTP-сессия (основная)")
             use_session = self._session
@@ -588,11 +593,13 @@ class AnimeLibrary(QObject):
                     await asyncio.sleep(0.4 * (2 ** attempt) + random.random() * 0.2)
                     continue
                 raise
-            except asyncio.TimeoutError:
+            except asyncio.TimeoutError as e:
                 logging.debug(f"Timeout on GET {url} (attempt {attempt})")
                 if attempt < attempts - 1:
                     await asyncio.sleep(0.4 * (2 ** attempt) + random.random() * 0.2)
                     continue
+                # Логируем полную информацию об ошибке таймаута перед выбросом
+                logging.error(f"Окончательный таймаут после {attempts} попыток для {url}")
                 raise
     # --------------------------------------------
 
@@ -1199,24 +1206,30 @@ class AnimeLibrary(QObject):
     async def search_anilibria_releases(self, query: str) -> Tuple[int, List[Dict]]:
         """Поиск релизов на Aniliberty"""
         if not hasattr(self, 'aniliberty_session') or not self.aniliberty_session or self.aniliberty_session.closed:
-            timeout = aiohttp.ClientTimeout(total=10)
+            # Очень большие таймауты для медленных соединений
+            timeout = aiohttp.ClientTimeout(total=120, connect=30, sock_read=90)
             self.aniliberty_session = aiohttp.ClientSession(timeout=timeout)
             
         url = "https://aniliberty.top/api/v1/app/search/releases"
         params = {"query": query}
         
+        logging.debug(f"Поиск Aniliberty: {url} с параметрами {params}")
         status, data = await self.api_get(url, params=params, as_json=True, session=self.aniliberty_session)
+        logging.debug(f"Результат поиска: статус={status}, данных={len(data) if data else 0}")
         return status, data
 
     async def get_release_details(self, release_id: int) -> Tuple[int, Dict]:
         """Получить детали релиза (включая торренты)"""
         async with self._metadata_lock:
             if not hasattr(self, 'aniliberty_session') or not self.aniliberty_session or self.aniliberty_session.closed:
-                timeout = aiohttp.ClientTimeout(total=10)
+                # Очень большие таймауты для деталей релиза
+                timeout = aiohttp.ClientTimeout(total=120, connect=30, sock_read=90)
                 self.aniliberty_session = aiohttp.ClientSession(timeout=timeout)
             
             url = f"https://aniliberty.top/api/v1/anime/releases/{release_id}"
+            logging.debug(f"Запрос деталей релиза: {url}")
             status, data = await self.api_get(url, as_json=True, session=self.aniliberty_session)
+            logging.debug(f"Результат деталей релиза {release_id}: статус={status}")
             await asyncio.sleep(0.25)  # Rate limit
             return status, data
 
@@ -1229,14 +1242,17 @@ class AnimeLibrary(QObject):
         file_path = cache_dir / filename
         
         if file_path.exists():
+            logging.debug(f"Torrent файл уже существует: {file_path}")
             return str(file_path)
         
         url = f"https://aniliberty.top/api/v1/anime/torrents/{torrent_id}/file"
+        logging.debug(f"Скачивание torrent файла: {url}")
         status, content = await self.api_get(url, as_bytes=True, session=self.aniliberty_session)
         
         if status == 200 and content:
             async with aiofiles.open(file_path, 'wb') as f:
                 await f.write(content)
+            logging.debug(f"Torrent файл сохранён: {file_path}")
             return str(file_path)
         else:
             raise Exception(f"HTTP {status}")
