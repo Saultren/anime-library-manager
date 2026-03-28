@@ -21,6 +21,7 @@ from ui.anime_title import AnimeTile, AnimeTileProxy
 from ui.anime_modal import AnimeModal
 from anime_library_core import AnimeLibrary
 from ui.animated_line_edit import AnimatedLineEdit
+from ui.download_modal import DownloadModal
 
 class HeaderWidget(QWidget):
     """
@@ -32,6 +33,7 @@ class HeaderWidget(QWidget):
     scan_clicked = Signal()           # Запрос на сканирование библиотеки
     refresh_clicked = Signal()        # Запрос на загрузку метаданных
     search_text_changed = Signal(str) # Поисковый запрос изменился
+    download_modal_clicked = Signal() # Кнопка открытия окна загрузок
 
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -100,10 +102,13 @@ class HeaderWidget(QWidget):
         
         layout.addWidget(search_container, 0, 1, Qt.AlignCenter | Qt.AlignVCenter)
 
-        # Правая пустая колонка для баланса интерфейса
-        right_spacer = QWidget()
-        right_spacer.setLayout(QHBoxLayout())
-        layout.addWidget(right_spacer, 0, 2)
+        # ⬇️ ПРАВАЯ ЧАСТЬ - КНОПКА ЗАГРУЗОК (ЗАМЕНЯЕМ right_spacer)
+        self.btn_download_modal = QPushButton()
+        self.btn_download_modal.setObjectName("btnDownloadModal")
+        self.btn_download_modal.setFixedSize(BUTTON_HEIGHT, BUTTON_HEIGHT)
+        self.btn_download_modal.setIcon(self._create_icon("download"))  # Используй setText("📥") если иконки нет
+        self.btn_download_modal.clicked.connect(self.download_modal_clicked.emit)
+        layout.addWidget(self.btn_download_modal, 0, 2, Qt.AlignRight | Qt.AlignVCenter)
 
     def _create_icon(self, icon_name: str) -> QIcon:
         """
@@ -220,6 +225,12 @@ class MainWindow(QMainWindow):
         self.header.scan_clicked.connect(self.on_scan)
         self.header.refresh_clicked.connect(self.on_refresh)
         self.header.search_text_changed.connect(self.on_search)
+        self.header.download_modal_clicked.connect(self.open_download_modal)
+        
+    def open_download_modal(self):
+        modal = DownloadModal(self, self.library)
+        modal.closed.connect(modal.deleteLater)
+        modal.show()
 
     def on_choose_folder(self):
         """Диалог выбора папки с аниме через QFileDialog"""
