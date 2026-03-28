@@ -1151,7 +1151,55 @@ class AnimeLibrary(QObject):
             finally:
                 self._session = None
                 logging.debug("HTTP-сессия закрыта")
-    # --------------------------------------------
+
+    # ---------------- Aniliberty API Methods -----------------
+    # Перенесено из LibraryScanner для корректного доступа через экземпляр AnimeLibrary
+    
+    async def search_anilibria_releases(self, query: str) -> Tuple[int, List[Dict]]:
+        """Поиск релизов на Aniliberty"""
+        if not hasattr(self, 'aniliberty_session') or not self.aniliberty_session or self.aniliberty_session.closed:
+            timeout = aiohttp.ClientTimeout(total=10)
+            self.aniliberty_session = aiohttp.ClientSession(timeout=timeout)
+            
+        url = "https://aniliberty.top/api/v1/app/search/releases"
+        params = {"query": query}
+        
+        status, data = await self.api_get(url, params=params, as_json=True, session=self.aniliberty_session)
+        return status, data
+
+    async def get_release_details(self, release_id: int) -> Tuple[int, Dict]:
+        """Получить детали релиза (включая торренты)"""
+        async with self._metadata_lock:
+            if not hasattr(self, 'aniliberty_session') or not self.aniliberty_session or self.aniliberty_session.closed:
+                timeout = aiohttp.ClientTimeout(total=10)
+                self.aniliberty_session = aiohttp.ClientSession(timeout=timeout)
+            
+            url = f"https://aniliberty.top/api/v1/anime/releases/{release_id}"
+            status, data = await self.api_get(url, as_json=True, session=self.aniliberty_session)
+            await asyncio.sleep(0.25)  # Rate limit
+            return status, data
+
+    async def download_torrent_file(self, torrent_id: int, release_name: str) -> str:
+        """Скачать .torrent файл в кэш"""
+        cache_dir = Path("~/.cache/anime-manager/torrents").expanduser()
+        cache_dir.mkdir(parents=True, exist_ok=True)
+        
+        filename = f"{release_name}_{torrent_id}.torrent"
+        file_path = cache_dir / filename
+        
+        if file_path.exists():
+            return str(file_path)
+        
+        url = f"https://aniliberty.top/api/v1/anime/torrents/{torrent_id}/file"
+        status, content = await self.api_get(url, as_bytes=True, session=self.aniliberty_session)
+        
+        if status == 200 and content:
+            async with aiofiles.open(file_path, 'wb') as f:
+                await f.write(content)
+            return str(file_path)
+        else:
+            raise Exception(f"HTTP {status}")
+    # ---------------------------------------------------------
 
 
 class LibraryScanner(QObject):
@@ -1197,51 +1245,6 @@ class LibraryScanner(QObject):
         """Остановка сканирования"""
         self._is_running = False
 
-    # ---------------- Aniliberty API -----------------
-    async def search_anilibria_releases(self, query: str) -> Tuple[int, List[Dict]]:
-        """Поиск релизов на Aniliberty"""
-        if not self.aniliberty_session or self.aniliberty_session.closed:
-            timeout = aiohttp.ClientTimeout(total=10)
-            self.aniliberty_session = aiohttp.ClientSession(timeout=timeout)
-            
-        url = "https://aniliberty.top/api/v1/app/search/releases"
-        params = {"query": query}
-        
-        status, data = await self.api_get(url, params=params, as_json=True, session=self.aniliberty_session)
-        return status, data
-
-    async def get_release_details(self, release_id: int) -> Tuple[int, Dict]:
-        """Получить детали релиза (включая торренты)"""
-        async with self._metadata_lock:
-            if not self.aniliberty_session or self.aniliberty_session.closed:
-                timeout = aiohttp.ClientTimeout(total=10)
-                self.aniliberty_session = aiohttp.ClientSession(timeout=timeout)
-            
-            url = f"https://aniliberty.top/api/v1/anime/releases/{release_id}"
-            status, data = await self.api_get(url, as_json=True, session=self.aniliberty_session)
-            await asyncio.sleep(0.25)  # Rate limit
-            return status, data
-
-    async def download_torrent_file(self, torrent_id: int, release_name: str) -> str:
-        """Скачать .torrent файл в кэш"""
-        cache_dir = Path("~/.cache/anime-manager/torrents").expanduser()
-        cache_dir.mkdir(parents=True, exist_ok=True)
-        
-        filename = f"{release_name}_{torrent_id}.torrent"
-        file_path = cache_dir / filename
-        
-        if file_path.exists():
-            return str(file_path)
-        
-        url = f"https://aniliberty.top/api/v1/anime/torrents/{torrent_id}/file"
-        status, content = await self.api_get(url, as_bytes=True, session=self.aniliberty_session)
-        
-        if status == 200 and content:
-            async with aiofiles.open(file_path, 'wb') as f:
-                await f.write(content)
-            return str(file_path)
-        else:
-            raise Exception(f"HTTP {status}")
 
     def setup_torrent_manager(self, save_path: Optional[str] = None):
         """Инициализировать менеджер загрузок (только создание объекта)"""
