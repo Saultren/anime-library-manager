@@ -49,7 +49,7 @@ def setup_logging():
 setup_logging()
 
 # ============== Конфигурация API ==============
-USER_AGENT = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
+USER_AGENT = "anime-manager/1.0"
 # ==============================================
 
 class AnimeStatus(Enum):
@@ -1213,7 +1213,13 @@ class AnimeLibrary(QObject):
         url = "https://aniliberty.top/api/v1/app/search/releases"
         params = {"query": query}
         
-        logging.debug(f"Поиск Aniliberty: {url} с параметрами {params}")
+        # Логирование полного URL для отладки
+        from urllib.parse import urlencode
+        full_url = f"{url}?{urlencode(params)}"
+        logging.debug(f"=== Anilibria Search Request ===")
+        logging.debug(f"URL: {full_url}")
+        logging.debug(f"Headers: {self.api_headers()}")
+        
         status, data = await self.api_get(url, params=params, as_json=True, session=self.aniliberty_session)
         logging.debug(f"Результат поиска: статус={status}, данных={len(data) if data else 0}")
         return status, data

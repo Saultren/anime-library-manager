@@ -1,1 +1,1 @@
-Nothing should be ignored since only a Python source file was modified and no build artifacts, dependencies, or temp files were detected.
+Nothing should be ignored since only a Python source file (`anime_library_core.py`) was modified and there are no build artifacts, dependencies, or temporary files in the changes.
