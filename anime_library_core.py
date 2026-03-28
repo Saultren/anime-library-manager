@@ -49,7 +49,7 @@ def setup_logging():
 setup_logging()
 
 # ============== Конфигурация API ==============
-USER_AGENT = "anime-manager/1.0 (github.com/Saultren/anime-library-manager)"
+USER_AGENT = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
 # ==============================================
 
 class AnimeStatus(Enum):
