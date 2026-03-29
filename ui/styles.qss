@@ -254,13 +254,13 @@ QLabel#statusLabel {
     border: 1px solid #333333;
 }
 
-#downloadTitle {
+#downloadItem QLabel#downloadTitle {
     color: #ffffff;
     font-size: 15px;
     font-weight: 600;
 }
 
-#downloadMeta {
+#downloadItem QLabel#downloadMeta {
     color: #909090;
     font-size: 12px;
 }
