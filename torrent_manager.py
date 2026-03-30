@@ -311,6 +311,63 @@ class TorrentManager:
                 statuses.append(status)
         return statuses
 
+    async def reorganize_download_folder(self, info_hash: str):
+        """
+        Реорганизовать папку загрузки: убрать лишнюю вложенность.
+        
+        Проблема: при скачивании создается структура:
+        /mnt/Аниме/{release_name}/{japanese_name}/серии
+        
+        Нужно:
+        /mnt/Аниме/{japanese_name}/серии
+        
+        Логика: если в папке релиза есть только одна подпапка, переместить её содержимое на уровень выше.
+        """
+        if info_hash not in self._active_downloads:
+            return
+            
+        handle = self._active_downloads[info_hash]
+        if not handle.is_valid():
+            return
+        
+        save_path = Path(handle.save_path())
+        if not save_path.exists():
+            return
+        
+        # Получаем список подпапок в директории сохранения
+        subdirs = [d for d in save_path.iterdir() if d.is_dir()]
+        
+        # Если есть только одна подпапка - это кандидат на перемещение
+        if len(subdirs) == 1:
+            single_subdir = subdirs[0]
+            logging.info(f"Обнаружена вложенная папка: {single_subdir.name}")
+            
+            # Перемещаем содержимое подпапки на уровень выше
+            try:
+                for item in single_subdir.iterdir():
+                    dest = save_path / item.name
+                    
+                    # Если destination уже существует, добавляем суффикс
+                    if dest.exists():
+                        stem = item.stem
+                        suffix = item.suffix
+                        counter = 1
+                        while dest.exists():
+                            dest = save_path / f"{stem}_{counter}{suffix}"
+                            counter += 1
+                    
+                    # Перемещаем файл/папку
+                    import shutil
+                    await asyncio.to_thread(lambda: shutil.move(str(item), str(dest)))
+                    logging.debug(f"Перемещено: {item.name} → {dest.name}")
+                
+                # Удаляем пустую подпапку
+                await asyncio.to_thread(lambda: single_subdir.rmdir())
+                logging.info(f"Папка {single_subdir.name} удалена, содержимое перемещено на уровень выше")
+                
+            except Exception as e:
+                logging.error(f"Ошибка реорганизации папки {save_path}: {e}")
+
     async def shutdown(self):
         """Корректное завершение работы"""
         logging.info("Остановка TorrentManager...")
