@@ -606,6 +606,10 @@ class DownloadModal(QWidget):
                     btn.setText("✅")
                     btn.setEnabled(False)
                     
+                    # Реорганизуем папку загрузки (убираем лишнюю вложенность)
+                    if self.library.torrent_manager:
+                        await self.library.torrent_manager.reorganize_download_folder(info_hash)
+                    
                     # Обновляем UI списка загрузок если мы в режиме загрузок
                     if self._current_mode == "downloads":
                         self._render_active_downloads()
