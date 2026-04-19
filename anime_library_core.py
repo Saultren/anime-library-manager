@@ -601,6 +601,79 @@ class AnimeLibrary(QObject):
                 # Логируем полную информацию об ошибке таймаута перед выбросом
                 logging.error(f"Окончательный таймаут после {attempts} попыток для {url}")
                 raise
+
+    async def api_post(self, url: str, json_data: Dict, *, as_json: bool = False, 
+                    as_bytes: bool = False, session: Optional[aiohttp.ClientSession] = None):
+        """
+        Универсальный POST с retry/backoff для GraphQL запросов.
+        Поддерживает как основную сессию (self._session), так и внешнюю (session).
+        
+        Возвращает: (status:int, content) — content зависит от флагов:
+            - as_json=True -> parsed JSON (обычно dict/list)
+            - as_bytes=True -> raw bytes
+            - иначе -> text (str)
+        
+        retry: максимум 3 попытки (attempt 0,1,2)
+        Политика для 429: ждать 1.5-2.0 сек и пробовать снова
+        """
+        # Выбираем, какую сессию использовать
+        use_session = session
+        if use_session is None:
+            if not self._session or self._session.closed:
+                timeout = aiohttp.ClientTimeout(total=120, connect=30, sock_read=90)
+                self._session = aiohttp.ClientSession(timeout=timeout)
+                logging.debug("Создана новая HTTP-сессия (основная)")
+            use_session = self._session
+
+        # Заголовки для GraphQL запроса
+        headers = self.api_headers()
+        headers["Content-Type"] = "application/json"
+
+        attempts = 3
+        for attempt in range(attempts):
+            try:
+                async with use_session.post(url, json=json_data, headers=headers) as resp:
+                    status = resp.status
+
+                    # 429 -> ожидание и retry
+                    if status == 429 and attempt < attempts - 1:
+                        await asyncio.sleep(1.5 + random.random() * 0.5)
+                        continue
+
+                    # 5xx -> retry с backoff
+                    if 500 <= status < 600 and attempt < attempts - 1:
+                        await asyncio.sleep(0.4 * (2 ** attempt) + random.random() * 0.2)
+                        continue
+
+                    # Успешно или окончательная ошибка
+                    if as_json:
+                        try:
+                            data = await resp.json()
+                        except Exception:
+                            text = await resp.text()
+                            logging.debug(f"Failed to parse JSON from {url}; status {status}; text preview: {text[:200]}")
+                            data = None
+                        return status, data
+                    elif as_bytes:
+                        data = await resp.read()
+                        return status, data
+                    else:
+                        data = await resp.text()
+                        return status, data
+
+            except ClientError as e:
+                logging.debug(f"ClientError on POST {url}: {e} (attempt {attempt})")
+                if attempt < attempts - 1:
+                    await asyncio.sleep(0.4 * (2 ** attempt) + random.random() * 0.2)
+                    continue
+                raise
+            except asyncio.TimeoutError as e:
+                logging.debug(f"Timeout on POST {url} (attempt {attempt})")
+                if attempt < attempts - 1:
+                    await asyncio.sleep(0.4 * (2 ** attempt) + random.random() * 0.2)
+                    continue
+                logging.error(f"Окончательный таймаут после {attempts} попыток для {url}")
+                raise
     # --------------------------------------------
 
     def _start_async_operation(self, coroutine, *args):
@@ -797,39 +870,38 @@ class AnimeLibrary(QObject):
     # --------------------------------------------
 
     async def _fetch_shikimori_metadata(self, anime_id: str, anime_name: str):
-        """Получение метаданных с Shikimori API (через api_get)"""
+        """Получение метаданных с Shikimori GraphQL API"""
         async with self._metadata_lock:
             try:
-                logging.debug(f"Запрос метаданных с Shikimori для: {anime_name}")
+                logging.debug(f"Запрос метаданных с Shikimori GraphQL для: {anime_name}")
 
-                # Шаг 1: Поиск аниме
-                search_url = "https://shikimori.one/api/animes"
-                params = {"search": anime_name, "limit": 1}
-                status, search_data = await self.api_get(search_url, params=params, as_json=True)
+                # GraphQL запрос к новому API
+                graphql_url = "https://shikimori.one/api/graphql"
+                
+                # Формируем GraphQL query - экранируем кавычки в названии
+                escaped_name = anime_name.replace('"', '\\"')
+                query = f'{{animes(search:"{escaped_name}", limit:1){{id name russian english japanese score status episodes airedOn{{year month day date}} poster{{originalUrl mainUrl}} genres{{name russian}} description}}}}'
+                
+                graphql_data = {"query": query}
+                
+                status, response_data = await self.api_post(graphql_url, json_data=graphql_data, as_json=True)
 
                 if status != 200:
-                    error_msg = f"Ошибка поиска: HTTP {status}"
+                    error_msg = f"Ошибка GraphQL запроса: HTTP {status}"
                     logging.error(error_msg)
-                    self.error_occurred.emit("shikimori_search", error_msg)
+                    self.error_occurred.emit("shikimori_graphql", error_msg)
                     return
 
-                if not search_data:
+                if not response_data or "data" not in response_data:
+                    logging.warning(f"Пустой ответ от GraphQL API для: {anime_name}")
+                    return
+
+                animes_list = response_data.get("data", {}).get("animes", [])
+                if not animes_list:
                     logging.warning(f"Аниме не найдено на Shikimori: {anime_name}")
                     return
 
-                anime_shiki_id = search_data[0].get('id')
-                if not anime_shiki_id:
-                    logging.warning(f"Search result has no id for '{anime_name}'")
-                    return
-
-                # Шаг 2: Получение детальной информации
-                detail_url = f"https://shikimori.one/api/animes/{anime_shiki_id}"
-                status, anime_data = await self.api_get(detail_url, as_json=True)
-                if status != 200:
-                    error_msg = f"Ошибка деталей: HTTP {status}"
-                    logging.error(error_msg)
-                    self.error_occurred.emit("shikimori_detail", error_msg)
-                    return
+                anime_data = animes_list[0]
 
                 # Форматирование данных
                 metadata = self._format_metadata(anime_data)
@@ -853,7 +925,7 @@ class AnimeLibrary(QObject):
                 self.anime_entries[anime_id].metadata = metadata
                 self.metadata_loaded.emit(anime_id, metadata)
 
-                # Загрузка постера, если доступен (через api_get -> as_bytes)
+                # Загрузка постера, если доступен
                 cover_url = metadata.get('coverImage', {}).get('large')
                 if cover_url:
                     self._start_async_operation(self._download_poster, anime_id, cover_url)
@@ -864,7 +936,7 @@ class AnimeLibrary(QObject):
                 self.error_occurred.emit("metadata_fetch", str(e))
 
     def _format_metadata(self, anime_data: Dict) -> Dict:
-        """Форматирование метаданных из Shikimori в единый формат"""
+        """Форматирование метаданных из Shikimori GraphQL в единый формат"""
         # Безопасная очистка описания от BB-кодов и HTML
         description = anime_data.get('description', '')
         if description:
@@ -874,27 +946,38 @@ class AnimeLibrary(QObject):
         else:
             description = "Описание недоступно"
 
-        # Безопасное получение названий
-        english_titles = anime_data.get('english', [])
-        japanese_titles = anime_data.get('japanese', [])
+        # Получение названий - в GraphQL это прямые строки, а не списки
+        english_title = anime_data.get('english', '')
+        japanese_title = anime_data.get('japanese', '')
+
+        # Получение года из airedOn
+        aired_on = anime_data.get('airedOn', {})
+        year = aired_on.get('year') if aired_on else None
+
+        # Получение постера - в GraphQL это poster.originalUrl
+        poster_data = anime_data.get('poster', {})
+        poster_url = poster_data.get('originalUrl') if poster_data else None
+        
+        # Если URL есть, добавляем префикс домена если нужно
+        if poster_url and not poster_url.startswith('http'):
+            poster_url = f"https://shikimori.one{poster_url}"
 
         return {
             'title': {
                 'romaji': anime_data.get('name', ''),
-                'english': english_titles[0] if english_titles else '',
+                'english': english_title if english_title else '',
                 'russian': anime_data.get('russian', ''),
-                'native': japanese_titles[0] if japanese_titles else ''
+                'native': japanese_title if japanese_title else ''
             },
             'coverImage': {
-                'large': f"https://shikimori.one{anime_data['image']['original']}"
-                        if anime_data.get('image') and 'original' in anime_data['image'] else None
+                'large': poster_url
             },
             'description': description,
             'episodes': anime_data.get('episodes'),
             'genres': [genre.get('russian', genre.get('name', '')) for genre in anime_data.get('genres', [])],
             'status': anime_data.get('status', '').capitalize(),
             'averageScore': anime_data.get('score'),
-            'year': anime_data.get('aired_on', '')[:4] if anime_data.get('aired_on') else None
+            'year': year
         }
 
     async def _download_poster(self, anime_id: str, poster_url: str):
