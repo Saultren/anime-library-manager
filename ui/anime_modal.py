@@ -320,3 +320,90 @@ class AnimeModal(QWidget):
         painter.end()
         
         return result
+
+    def update_from_metadata(self, metadata):
+        """Обновление интерфейса модального окна после загрузки метаданных"""
+        if not metadata:
+            return
+            
+        # Находим все QLabel и QTextEdit в layout
+        title_ru = None
+        title_jp = None
+        score_label = None
+        genres_label = None
+        year_label = None
+        description_edit = None
+        
+        right_container = None
+        # Ищем правый контейнер через иерархию
+        for i in range(self.center_block.layout().count()):
+            layout_item = self.center_block.layout().itemAt(i)
+            if layout_item and layout_item.layout():
+                top_layout = layout_item.layout()
+                if top_layout.count() >= 2:
+                    widget = top_layout.itemAt(1).widget()
+                    if widget and isinstance(widget, QWidget):
+                        right_container = widget
+                        break
+        
+        if not right_container or not right_container.layout():
+            return
+            
+        # Проходим по виджетам в правом контейнере
+        widgets_to_update = []
+        for i in range(right_container.layout().count()):
+            item = right_container.layout().itemAt(i)
+            if item and item.widget():
+                widgets_to_update.append(item.widget())
+        
+        # Обновляем заголовки (первые два QLabel)
+        if len(widgets_to_update) >= 2:
+            title_ru = widgets_to_update[0]
+            title_jp = widgets_to_update[1]
+            
+            if isinstance(title_ru, QLabel):
+                title_ru.setText(metadata.get('title', {}).get('russian', self.entry.clean_name))
+            if isinstance(title_jp, QLabel):
+                title_jp.setText(metadata.get('title', {}).get('native', ''))
+        
+        # Обновляем инфо-блоки (следующие 4 виджета: рейтинг, жанры, год, серии)
+        if len(widgets_to_update) >= 6:
+            # Рейтинг (3-й виджет, индекс 2)
+            score_widget = widgets_to_update[2]
+            if score_widget and score_widget.layout() and score_widget.layout().count() >= 2:
+                value_label = score_widget.layout().itemAt(1).widget()
+                if isinstance(value_label, QLabel):
+                    value_label.setText(str(metadata.get('averageScore', '-')))
+            
+            # Жанры (4-й виджет, индекс 3)
+            genres_widget = widgets_to_update[3]
+            if genres_widget and genres_widget.layout() and genres_widget.layout().count() >= 2:
+                value_label = genres_widget.layout().itemAt(1).widget()
+                if isinstance(value_label, QLabel):
+                    value_label.setText(", ".join(metadata.get('genres', [])))
+            
+            # Год (5-й виджет, индекс 4)
+            year_widget = widgets_to_update[4]
+            if year_widget and year_widget.layout() and year_widget.layout().count() >= 2:
+                value_label = year_widget.layout().itemAt(1).widget()
+                if isinstance(value_label, QLabel):
+                    value_label.setText(str(metadata.get('year', '-')))
+        
+        # Описание (QTextEdit, обычно 6-й виджет, индекс 5)
+        if len(widgets_to_update) >= 6:
+            desc_widget = widgets_to_update[5]
+            if isinstance(desc_widget, QTextEdit):
+                desc_widget.setText(metadata.get('description', 'Описание недоступно'))
+        
+        # Обновляем постер если есть путь
+        poster_path = self.entry.poster_path
+        if poster_path:
+            source_pixmap = QPixmap(poster_path)
+            if not source_pixmap.isNull():
+                cropped_pixmap = self._create_cropped_rounded_pixmap(
+                    source_pixmap,
+                    self.poster_label.size(),
+                    radius=12
+                )
+                self.poster_label.setPixmap(cropped_pixmap)
+                self.poster_label.setText("")
