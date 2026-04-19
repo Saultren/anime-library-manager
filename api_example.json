@@ -1,0 +1,1352 @@
+{
+  "data": {
+    "animes": [
+      {
+        "id": "32380",
+        "malId": "32380",
+        "name": "Kono Subarashii Sekai ni Shukufuku wo!: Kono Subarashii Choker ni Shukufuku wo!",
+        "russian": "Этот замечательный мир! Этот замечательный ошейник!",
+        "licenseNameRu": null,
+        "english": "KonoSuba: God's Blessing on This Wonderful World! - God's Blessing on This Wonderful Choker!",
+        "japanese": "この素晴らしい世界に祝福を！ 第11話 この素晴らしいチヨーカーに祝福を！",
+        "synonyms": [
+          "Этот замечательный мир! OVA",
+          "Богиня благословляет этот прекрасный мир! OVA",
+          "Да благословят боги сей расчудесный мир! OVA",
+          "KonoSuba OVA",
+          "A Blessing to this Wonderful Choker!"
+        ],
+        "kind": "ova",
+        "rating": "pg_13",
+        "score": 7.83,
+        "status": "released",
+        "episodes": 1,
+        "episodesAired": 0,
+        "duration": 23,
+        "airedOn": {
+          "year": 2016,
+          "month": 6,
+          "day": 24,
+          "date": "2016-06-24"
+        },
+        "releasedOn": {
+          "year": null,
+          "month": null,
+          "day": null,
+          "date": null
+        },
+        "url": "https://shikimori.io/animes/32380-kono-subarashii-sekai-ni-shukufuku-wo-kono-subarashii-choker-ni-shukufuku-wo",
+        "season": null,
+        "poster": {
+          "id": "982210",
+          "originalUrl": "https://shikimori.io/uploads/poster/animes/32380/38165bf582e4288fe64ecef592d3a5e5.jpeg",
+          "mainUrl": "https://shikimori.io/uploads/poster/animes/32380/main-957dea32a7cd6911833a0cb7b15fca4d.webp"
+        },
+        "fansubbers": [
+          "SovetRomantica"
+        ],
+        "fandubbers": [
+          "LE-Production",
+          "AniLibria",
+          "HaronMedia",
+          "AniDUB",
+          "SHIZA Project",
+          "AnimeVost",
+          "CoverWD",
+          "AniMur",
+          "Under the Beer",
+          "AniBaza"
+        ],
+        "licensors": [],
+        "createdAt": "2016-01-15T19:02:17+03:00",
+        "updatedAt": "2026-04-17T00:15:41+03:00",
+        "nextEpisodeAt": null,
+        "isCensored": false,
+        "genres": [
+          {
+            "id": "4",
+            "name": "Comedy",
+            "russian": "Комедия",
+            "kind": "genre"
+          },
+          {
+            "id": "10",
+            "name": "Fantasy",
+            "russian": "Фэнтези",
+            "kind": "genre"
+          },
+          {
+            "id": "130",
+            "name": "Isekai",
+            "russian": "Исэкай",
+            "kind": "theme"
+          },
+          {
+            "id": "20",
+            "name": "Parody",
+            "russian": "Пародия",
+            "kind": "theme"
+          }
+        ],
+        "studios": [
+          {
+            "id": "37",
+            "name": "Studio Deen",
+            "imageUrl": "https://shikimori.io/system/studios/original/37.?1434707541"
+          }
+        ],
+        "externalLinks": [
+          {
+            "id": "54486800",
+            "kind": "official_site",
+            "url": "http://konosuba.com/",
+            "createdAt": "2026-04-17T00:15:39+03:00",
+            "updatedAt": "2026-04-17T00:15:39+03:00"
+          },
+          {
+            "id": "13125767",
+            "kind": "wikipedia",
+            "url": "https://ru.wikipedia.org/wiki/Да_благословят_боги_этот_прекрасный_мир!#Аниме",
+            "createdAt": "2022-11-01T21:00:07+03:00",
+            "updatedAt": "2022-11-01T21:00:07+03:00"
+          },
+          {
+            "id": "54486806",
+            "kind": "wikipedia",
+            "url": "https://ja.wikipedia.org/wiki/%E3%81%93%E3%81%AE%E7%B4%A0%E6%99%B4%E3%82%89%E3%81%97%E3%81%84%E4%B8%96%E7%95%8C%E3%81%AB%E7%A5%9D%E7%A6%8F%E3%82%92!",
+            "createdAt": "2026-04-17T00:15:40+03:00",
+            "updatedAt": "2026-04-17T00:15:40+03:00"
+          },
+          {
+            "id": "47762683",
+            "kind": "wikipedia",
+            "url": "https://en.wikipedia.org/wiki/KonoSuba",
+            "createdAt": "2025-11-10T07:29:31+03:00",
+            "updatedAt": "2025-11-10T07:29:31+03:00"
+          },
+          {
+            "id": null,
+            "kind": "myanimelist",
+            "url": "http://myanimelist.net/anime/32380",
+            "createdAt": null,
+            "updatedAt": null
+          },
+          {
+            "id": "13125770",
+            "kind": "anime_db",
+            "url": "https://anidb.net/anime/11854",
+            "createdAt": "2023-06-14T15:27:49+03:00",
+            "updatedAt": "2023-06-14T15:27:49+03:00"
+          },
+          {
+            "id": "13125768",
+            "kind": "world_art",
+            "url": "http://www.world-art.ru/animation/animation.php?id=8638",
+            "createdAt": "2017-07-03T11:22:01+03:00",
+            "updatedAt": "2020-02-09T11:47:39+03:00"
+          },
+          {
+            "id": "13125769",
+            "kind": "kinopoisk",
+            "url": "https://www.kinopoisk.ru/film/5190537/",
+            "createdAt": "2022-11-10T22:36:41+03:00",
+            "updatedAt": "2022-11-10T22:36:41+03:00"
+          },
+          {
+            "id": "13125771",
+            "kind": "kage_project",
+            "url": "http://fansubs.ru/base.php?id=5464",
+            "createdAt": "2017-06-02T13:25:06+03:00",
+            "updatedAt": "2020-02-09T11:47:39+03:00"
+          },
+          {
+            "id": "13125772",
+            "kind": "twitter",
+            "url": "https://twitter.com/konosubaanime",
+            "createdAt": "2022-11-01T21:00:07+03:00",
+            "updatedAt": "2022-11-01T21:00:07+03:00"
+          }
+        ],
+        "personRoles": [
+          {
+            "id": "418292763",
+            "rolesRu": [
+              "Продюсер"
+            ],
+            "rolesEn": [
+              "Producer"
+            ],
+            "person": {
+              "id": "65094",
+              "name": "Rie Ogura",
+              "poster": {
+                "id": "901442"
+              }
+            }
+          },
+          {
+            "id": "418292764",
+            "rolesRu": [
+              "Продюсер"
+            ],
+            "rolesEn": [
+              "Producer"
+            ],
+            "person": {
+              "id": "68860",
+              "name": "Nobumitsu Urasaki",
+              "poster": null
+            }
+          },
+          {
+            "id": "418292765",
+            "rolesRu": [
+              "Ассистент продюсера"
+            ],
+            "rolesEn": [
+              "Assistant Producer"
+            ],
+            "person": {
+              "id": "73645",
+              "name": "Yoshifumi Nakata",
+              "poster": null
+            }
+          },
+          {
+            "id": "418292766",
+            "rolesRu": [
+              "Режиссёр",
+              "Раскадровка"
+            ],
+            "rolesEn": [
+              "Director",
+              "Storyboard"
+            ],
+            "person": {
+              "id": "11299",
+              "name": "Takaomi Kanasaki",
+              "poster": {
+                "id": "877615"
+              }
+            }
+          },
+          {
+            "id": "418292767",
+            "rolesRu": [
+              "Звукорежиссёр"
+            ],
+            "rolesEn": [
+              "Sound Director"
+            ],
+            "person": {
+              "id": "6016",
+              "name": "Yoshikazu Iwanami",
+              "poster": {
+                "id": "876591"
+              }
+            }
+          },
+          {
+            "id": "418292768",
+            "rolesRu": [
+              "Режиссёр эпизодов"
+            ],
+            "rolesEn": [
+              "Episode Director"
+            ],
+            "person": {
+              "id": "52311",
+              "name": "Yasuo Iwamoto",
+              "poster": null
+            }
+          },
+          {
+            "id": "418292769",
+            "rolesRu": [
+              "Сценарий"
+            ],
+            "rolesEn": [
+              "Script"
+            ],
+            "person": {
+              "id": "38383",
+              "name": "Aoi Akashiro",
+              "poster": null
+            }
+          },
+          {
+            "id": "418292770",
+            "rolesRu": [
+              "Сценарий"
+            ],
+            "rolesEn": [
+              "Script"
+            ],
+            "person": {
+              "id": "59232",
+              "name": "Mélanie Decouzon",
+              "poster": {
+                "id": "942930"
+              }
+            }
+          },
+          {
+            "id": "418292771",
+            "rolesRu": [
+              "Исполнение гл. муз. темы"
+            ],
+            "rolesEn": [
+              "Theme Song Performance"
+            ],
+            "person": {
+              "id": "21517",
+              "name": "Sora Amamiya",
+              "poster": {
+                "id": "933540"
+              }
+            }
+          },
+          {
+            "id": "418292772",
+            "rolesRu": [
+              "Исполнение гл. муз. темы"
+            ],
+            "rolesEn": [
+              "Theme Song Performance"
+            ],
+            "person": {
+              "id": "10765",
+              "name": "Ai Kayano",
+              "poster": {
+                "id": "877508"
+              }
+            }
+          },
+          {
+            "id": "418292773",
+            "rolesRu": [
+              "Исполнение гл. муз. темы"
+            ],
+            "rolesEn": [
+              "Theme Song Performance"
+            ],
+            "person": {
+              "id": "36141",
+              "name": "Machico",
+              "poster": {
+                "id": "899973"
+              }
+            }
+          },
+          {
+            "id": "418292774",
+            "rolesRu": [
+              "Лирика гл. муз. темы",
+              "Аранжировка гл. муз. темы",
+              "Композитор гл. муз. темы"
+            ],
+            "rolesEn": [
+              "Theme Song Lyrics",
+              "Theme Song Arrangement",
+              "Theme Song Composition"
+            ],
+            "person": {
+              "id": "72510",
+              "name": "Ryousei Satou",
+              "poster": {
+                "id": "916894"
+              }
+            }
+          },
+          {
+            "id": "418292775",
+            "rolesRu": [
+              "Аранжировка гл. муз. темы",
+              "Композитор гл. муз. темы",
+              "Лирика гл. муз. темы"
+            ],
+            "rolesEn": [
+              "Theme Song Arrangement",
+              "Theme Song Composition",
+              "Theme Song Lyrics"
+            ],
+            "person": {
+              "id": "62040",
+              "name": "Kentarou Sonoda",
+              "poster": {
+                "id": "884449"
+              }
+            }
+          },
+          {
+            "id": "418292776",
+            "rolesRu": [
+              "Исполнение гл. муз. темы"
+            ],
+            "rolesEn": [
+              "Theme Song Performance"
+            ],
+            "person": {
+              "id": "34785",
+              "name": "Rie Takahashi",
+              "poster": {
+                "id": "879724"
+              }
+            }
+          },
+          {
+            "id": "418292777",
+            "rolesRu": [
+              "Режиссёр перевода"
+            ],
+            "rolesEn": [
+              "ADR Director"
+            ],
+            "person": {
+              "id": "57501",
+              "name": "Khaoula Aaba",
+              "poster": {
+                "id": "669814"
+              }
+            }
+          },
+          {
+            "id": "418292778",
+            "rolesRu": [
+              "Автор оригинала"
+            ],
+            "rolesEn": [
+              "Original Creator"
+            ],
+            "person": {
+              "id": "26303",
+              "name": "Natsume Akatsuki",
+              "poster": {
+                "id": "879175"
+              }
+            }
+          },
+          {
+            "id": "418292779",
+            "rolesRu": [
+              "Фоновая рисовка"
+            ],
+            "rolesEn": [
+              "Background Art"
+            ],
+            "person": {
+              "id": "35677",
+              "name": "Kazushi Fujii",
+              "poster": null
+            }
+          },
+          {
+            "id": "418292780",
+            "rolesRu": [
+              "Оператор-постановщик"
+            ],
+            "rolesEn": [
+              "Director of Photography"
+            ],
+            "person": {
+              "id": "39700",
+              "name": "Shigemitsu Hamao",
+              "poster": null
+            }
+          },
+          {
+            "id": "418292781",
+            "rolesRu": [
+              "Ключевая анимация"
+            ],
+            "rolesEn": [
+              "Key Animation"
+            ],
+            "person": {
+              "id": "71410",
+              "name": "Nobuo Hashimoto",
+              "poster": null
+            }
+          },
+          {
+            "id": "418292782",
+            "rolesRu": [
+              "Ключевая анимация"
+            ],
+            "rolesEn": [
+              "Key Animation"
+            ],
+            "person": {
+              "id": "70054",
+              "name": "Junichi Hashimoto",
+              "poster": null
+            }
+          },
+          {
+            "id": "418292783",
+            "rolesRu": [
+              "Ключевая анимация"
+            ],
+            "rolesEn": [
+              "Key Animation"
+            ],
+            "person": {
+              "id": "62514",
+              "name": "Emi Hirano",
+              "poster": null
+            }
+          },
+          {
+            "id": "418292784",
+            "rolesRu": [
+              "Ключевая анимация"
+            ],
+            "rolesEn": [
+              "Key Animation"
+            ],
+            "person": {
+              "id": "62978",
+              "name": "Saki Hisamatsu",
+              "poster": null
+            }
+          },
+          {
+            "id": "418292785",
+            "rolesRu": [
+              "Ключевая анимация"
+            ],
+            "rolesEn": [
+              "Key Animation"
+            ],
+            "person": {
+              "id": "57083",
+              "name": "Saori Hosoda",
+              "poster": null
+            }
+          },
+          {
+            "id": "418292786",
+            "rolesRu": [
+              "Ключевая анимация"
+            ],
+            "rolesEn": [
+              "Key Animation"
+            ],
+            "person": {
+              "id": "62515",
+              "name": "Naoaki Houjou",
+              "poster": null
+            }
+          },
+          {
+            "id": "418292787",
+            "rolesRu": [
+              "Планирование"
+            ],
+            "rolesEn": [
+              "Planning"
+            ],
+            "person": {
+              "id": "43775",
+              "name": "Takeshi Kikuchi",
+              "poster": {
+                "id": "974595"
+              }
+            }
+          },
+          {
+            "id": "418292788",
+            "rolesRu": [
+              "Дизайн персонажей",
+              "Главный аниматор"
+            ],
+            "rolesEn": [
+              "Character Design",
+              "Chief Animation Director"
+            ],
+            "person": {
+              "id": "10134",
+              "name": "Kouichi Kikuta",
+              "poster": null
+            }
+          },
+          {
+            "id": "418292789",
+            "rolesRu": [
+              "Монтаж"
+            ],
+            "rolesEn": [
+              "Editing"
+            ],
+            "person": {
+              "id": "37606",
+              "name": "Kashiko Kimura",
+              "poster": {
+                "id": "671325"
+              }
+            }
+          },
+          {
+            "id": "418292790",
+            "rolesRu": [
+              "Ключевая анимация"
+            ],
+            "rolesEn": [
+              "Key Animation"
+            ],
+            "person": {
+              "id": "73998",
+              "name": "Eriko Kotobuki",
+              "poster": null
+            }
+          },
+          {
+            "id": "418292791",
+            "rolesRu": [
+              "Музыка"
+            ],
+            "rolesEn": [
+              "Music"
+            ],
+            "person": {
+              "id": "22377",
+              "name": "Masato Kouda",
+              "poster": {
+                "id": "878844"
+              }
+            }
+          },
+          {
+            "id": "418292792",
+            "rolesRu": [
+              "Звуковые эффекты"
+            ],
+            "rolesEn": [
+              "Sound Effects"
+            ],
+            "person": {
+              "id": "16053",
+              "name": "Yasumasa Koyama",
+              "poster": {
+                "id": "878213"
+              }
+            }
+          },
+          {
+            "id": "418292793",
+            "rolesRu": [
+              "Второстепен. анимация"
+            ],
+            "rolesEn": [
+              "2nd Key Animation"
+            ],
+            "person": {
+              "id": "76076",
+              "name": "Natsumi Kubo",
+              "poster": null
+            }
+          },
+          {
+            "id": "418292794",
+            "rolesRu": [
+              "Планирование"
+            ],
+            "rolesEn": [
+              "Planning"
+            ],
+            "person": {
+              "id": "40950",
+              "name": "Daijou Kudou",
+              "poster": {
+                "id": "967755"
+              }
+            }
+          },
+          {
+            "id": "418292795",
+            "rolesRu": [
+              "Оригинал. дизайн персонажей"
+            ],
+            "rolesEn": [
+              "Original Character Design"
+            ],
+            "person": {
+              "id": "19197",
+              "name": "Kurone Mishima",
+              "poster": {
+                "id": "878474"
+              }
+            }
+          },
+          {
+            "id": "418292796",
+            "rolesRu": [
+              "Арт-директор"
+            ],
+            "rolesEn": [
+              "Art Director"
+            ],
+            "person": {
+              "id": "38085",
+              "name": "Masakazu Miyake",
+              "poster": {
+                "id": "447730"
+              }
+            }
+          },
+          {
+            "id": "418292797",
+            "rolesRu": [
+              "Ключевая анимация"
+            ],
+            "rolesEn": [
+              "Key Animation"
+            ],
+            "person": {
+              "id": "85695",
+              "name": "Hiroshi Obara",
+              "poster": null
+            }
+          },
+          {
+            "id": "418292798",
+            "rolesRu": [
+              "Второстепен. анимация"
+            ],
+            "rolesEn": [
+              "2nd Key Animation"
+            ],
+            "person": {
+              "id": "84680",
+              "name": "Rina Ogawa",
+              "poster": null
+            }
+          },
+          {
+            "id": "418292799",
+            "rolesRu": [
+              "Режиссёр перевода"
+            ],
+            "rolesEn": [
+              "ADR Director"
+            ],
+            "person": {
+              "id": "31859",
+              "name": "Javier Olguín",
+              "poster": {
+                "id": "879517"
+              }
+            }
+          },
+          {
+            "id": "418292800",
+            "rolesRu": [
+              "Ключевая анимация"
+            ],
+            "rolesEn": [
+              "Key Animation"
+            ],
+            "person": {
+              "id": "73232",
+              "name": "Sansai Onogi",
+              "poster": null
+            }
+          },
+          {
+            "id": "418292801",
+            "rolesRu": [
+              "Второстепен. анимация"
+            ],
+            "rolesEn": [
+              "2nd Key Animation"
+            ],
+            "person": {
+              "id": "75806",
+              "name": "Hiro Ooki",
+              "poster": null
+            }
+          },
+          {
+            "id": "418292802",
+            "rolesRu": [
+              "Режиссёр перевода"
+            ],
+            "rolesEn": [
+              "ADR Director"
+            ],
+            "person": {
+              "id": "55018",
+              "name": "Enzo Ratsito",
+              "poster": {
+                "id": "668974"
+              }
+            }
+          },
+          {
+            "id": "418292803",
+            "rolesRu": [
+              "Ключевая анимация"
+            ],
+            "rolesEn": [
+              "Key Animation"
+            ],
+            "person": {
+              "id": "31673",
+              "name": "Tetsuhito Saitou",
+              "poster": null
+            }
+          },
+          {
+            "id": "418292804",
+            "rolesRu": [
+              "Режиссёр перевода"
+            ],
+            "rolesEn": [
+              "ADR Director"
+            ],
+            "person": {
+              "id": "52934",
+              "name": "Leonardo Santhos",
+              "poster": {
+                "id": "882878"
+              }
+            }
+          },
+          {
+            "id": "418292805",
+            "rolesRu": [
+              "Планирование"
+            ],
+            "rolesEn": [
+              "Planning"
+            ],
+            "person": {
+              "id": "76006",
+              "name": "Akimasa Sasao",
+              "poster": null
+            }
+          },
+          {
+            "id": "418292806",
+            "rolesRu": [
+              "Ключевая анимация"
+            ],
+            "rolesEn": [
+              "Key Animation"
+            ],
+            "person": {
+              "id": "76475",
+              "name": "Taisei Sonoda",
+              "poster": null
+            }
+          },
+          {
+            "id": "418292807",
+            "rolesRu": [
+              "Компоновка серий"
+            ],
+            "rolesEn": [
+              "Series Composition"
+            ],
+            "person": {
+              "id": "6929",
+              "name": "Makoto Uezu",
+              "poster": {
+                "id": "899203"
+              }
+            }
+          },
+          {
+            "id": "418292808",
+            "rolesRu": [
+              "Режиссёр анимации"
+            ],
+            "rolesEn": [
+              "Animation Director"
+            ],
+            "person": {
+              "id": "48259",
+              "name": "Kousuke Yoshida",
+              "poster": null
+            }
+          },
+          {
+            "id": "418292809",
+            "rolesRu": [
+              "Дизайн цвета"
+            ],
+            "rolesEn": [
+              "Color Design"
+            ],
+            "person": {
+              "id": "37846",
+              "name": "Saori Yoshida",
+              "poster": null
+            }
+          },
+          {
+            "id": "418292810",
+            "rolesRu": [
+              "Помощник режиссёра"
+            ],
+            "rolesEn": [
+              "Assistant Director"
+            ],
+            "person": {
+              "id": "19333",
+              "name": "Shunji Yoshida",
+              "poster": null
+            }
+          }
+        ],
+        "characterRoles": [
+          {
+            "id": "418292756",
+            "rolesRu": [
+              "Main"
+            ],
+            "rolesEn": [
+              "Main"
+            ],
+            "character": {
+              "id": "117223",
+              "name": "Aqua",
+              "poster": {
+                "id": "900112"
+              }
+            }
+          },
+          {
+            "id": "418292757",
+            "rolesRu": [
+              "Main"
+            ],
+            "rolesEn": [
+              "Main"
+            ],
+            "character": {
+              "id": "117285",
+              "name": "Lalatina Ford Dustiness",
+              "poster": {
+                "id": "900115"
+              }
+            }
+          },
+          {
+            "id": "418292758",
+            "rolesRu": [
+              "Main"
+            ],
+            "rolesEn": [
+              "Main"
+            ],
+            "character": {
+              "id": "117225",
+              "name": "Megumin",
+              "poster": {
+                "id": "900113"
+              }
+            }
+          },
+          {
+            "id": "418292759",
+            "rolesRu": [
+              "Main"
+            ],
+            "rolesEn": [
+              "Main"
+            ],
+            "character": {
+              "id": "117221",
+              "name": "Kazuma Satou",
+              "poster": {
+                "id": "900116"
+              }
+            }
+          },
+          {
+            "id": "418292760",
+            "rolesRu": [
+              "Main"
+            ],
+            "rolesEn": [
+              "Main"
+            ],
+            "character": {
+              "id": "124753",
+              "name": "Yunyun",
+              "poster": {
+                "id": "900156"
+              }
+            }
+          },
+          {
+            "id": "418292761",
+            "rolesRu": [
+              "Supporting"
+            ],
+            "rolesEn": [
+              "Supporting"
+            ],
+            "character": {
+              "id": "124745",
+              "name": "Eris",
+              "poster": {
+                "id": "602707"
+              }
+            }
+          },
+          {
+            "id": "418292762",
+            "rolesRu": [
+              "Supporting"
+            ],
+            "rolesEn": [
+              "Supporting"
+            ],
+            "character": {
+              "id": "123868",
+              "name": "Wiz",
+              "poster": {
+                "id": "900153"
+              }
+            }
+          }
+        ],
+        "related": [
+          {
+            "id": "46144310",
+            "anime": {
+              "id": "30831",
+              "name": "Kono Subarashii Sekai ni Shukufuku wo!"
+            },
+            "manga": null,
+            "relationKind": "parent_story",
+            "relationText": "Изначальная история"
+          }
+        ],
+        "videos": [
+          {
+            "id": "13422",
+            "url": "https://youtu.be/8PxRJB3NPRQ",
+            "name": "",
+            "kind": "cm",
+            "playerUrl": "//youtube.com/embed/8PxRJB3NPRQ",
+            "imageUrl": "//img.youtube.com/vi/8PxRJB3NPRQ/hqdefault.jpg"
+          },
+          {
+            "id": "13423",
+            "url": "https://youtu.be/m4FOQ5NzodA",
+            "name": "",
+            "kind": "pv",
+            "playerUrl": "//youtube.com/embed/m4FOQ5NzodA",
+            "imageUrl": "//img.youtube.com/vi/m4FOQ5NzodA/hqdefault.jpg"
+          },
+          {
+            "id": "81378",
+            "url": "https://youtu.be/fpG3BPNQepY",
+            "name": "OP1 «fantastic dreamer» — Machico",
+            "kind": "op",
+            "playerUrl": "//youtube.com/embed/fpG3BPNQepY",
+            "imageUrl": "//img.youtube.com/vi/fpG3BPNQepY/hqdefault.jpg"
+          },
+          {
+            "id": "81379",
+            "url": "https://youtu.be/JhiU4IAZtug",
+            "name": "ED1 «Chiisana Boukensha» — Сора Амамия, Риэ Такахаси, Ай Каяно",
+            "kind": "ed",
+            "playerUrl": "//youtube.com/embed/JhiU4IAZtug",
+            "imageUrl": "//img.youtube.com/vi/JhiU4IAZtug/hqdefault.jpg"
+          },
+          {
+            "id": "81380",
+            "url": "https://youtu.be/uEj8DaXWnvE",
+            "name": "OP1 Full",
+            "kind": "op",
+            "playerUrl": "//youtube.com/embed/uEj8DaXWnvE",
+            "imageUrl": "//img.youtube.com/vi/uEj8DaXWnvE/hqdefault.jpg"
+          }
+        ],
+        "screenshots": [
+          {
+            "id": "768067",
+            "originalUrl": "https://shikimori.io/system/screenshots/original/932ed45380a0259189afdb667f2e9a595a70cc38.jpg?1682251803",
+            "x166Url": "https://shikimori.io/system/screenshots/x166/932ed45380a0259189afdb667f2e9a595a70cc38.jpg?1682251803",
+            "x332Url": "https://shikimori.io/system/screenshots/x332/932ed45380a0259189afdb667f2e9a595a70cc38.jpg?1682251803"
+          },
+          {
+            "id": "768068",
+            "originalUrl": "https://shikimori.io/system/screenshots/original/cbb17cac7d2cfd078568c07667a3e5b61c110d87.jpg?1682251805",
+            "x166Url": "https://shikimori.io/system/screenshots/x166/cbb17cac7d2cfd078568c07667a3e5b61c110d87.jpg?1682251805",
+            "x332Url": "https://shikimori.io/system/screenshots/x332/cbb17cac7d2cfd078568c07667a3e5b61c110d87.jpg?1682251805"
+          },
+          {
+            "id": "768069",
+            "originalUrl": "https://shikimori.io/system/screenshots/original/fb2a58a8650fb8bd037482b3710b3d61cfc7e44a.jpg?1682251806",
+            "x166Url": "https://shikimori.io/system/screenshots/x166/fb2a58a8650fb8bd037482b3710b3d61cfc7e44a.jpg?1682251806",
+            "x332Url": "https://shikimori.io/system/screenshots/x332/fb2a58a8650fb8bd037482b3710b3d61cfc7e44a.jpg?1682251806"
+          },
+          {
+            "id": "768070",
+            "originalUrl": "https://shikimori.io/system/screenshots/original/156eeefa56fccebadf34d69f21fc1cb101069a2b.jpg?1682251807",
+            "x166Url": "https://shikimori.io/system/screenshots/x166/156eeefa56fccebadf34d69f21fc1cb101069a2b.jpg?1682251807",
+            "x332Url": "https://shikimori.io/system/screenshots/x332/156eeefa56fccebadf34d69f21fc1cb101069a2b.jpg?1682251807"
+          },
+          {
+            "id": "768071",
+            "originalUrl": "https://shikimori.io/system/screenshots/original/52b0339523a6c5896ae57e3cabd8300101c0245d.jpg?1682251808",
+            "x166Url": "https://shikimori.io/system/screenshots/x166/52b0339523a6c5896ae57e3cabd8300101c0245d.jpg?1682251808",
+            "x332Url": "https://shikimori.io/system/screenshots/x332/52b0339523a6c5896ae57e3cabd8300101c0245d.jpg?1682251808"
+          },
+          {
+            "id": "768072",
+            "originalUrl": "https://shikimori.io/system/screenshots/original/f0c549a9f20438d4305b77e8e45466220869fac4.jpg?1682251809",
+            "x166Url": "https://shikimori.io/system/screenshots/x166/f0c549a9f20438d4305b77e8e45466220869fac4.jpg?1682251809",
+            "x332Url": "https://shikimori.io/system/screenshots/x332/f0c549a9f20438d4305b77e8e45466220869fac4.jpg?1682251809"
+          },
+          {
+            "id": "768073",
+            "originalUrl": "https://shikimori.io/system/screenshots/original/cbfcc5a047f2b703deb35ed1338ced6ad0a276dd.jpg?1682251810",
+            "x166Url": "https://shikimori.io/system/screenshots/x166/cbfcc5a047f2b703deb35ed1338ced6ad0a276dd.jpg?1682251810",
+            "x332Url": "https://shikimori.io/system/screenshots/x332/cbfcc5a047f2b703deb35ed1338ced6ad0a276dd.jpg?1682251810"
+          },
+          {
+            "id": "768074",
+            "originalUrl": "https://shikimori.io/system/screenshots/original/3172afc501741e2da9aa2df53a10af60ba630839.jpg?1682251811",
+            "x166Url": "https://shikimori.io/system/screenshots/x166/3172afc501741e2da9aa2df53a10af60ba630839.jpg?1682251811",
+            "x332Url": "https://shikimori.io/system/screenshots/x332/3172afc501741e2da9aa2df53a10af60ba630839.jpg?1682251811"
+          },
+          {
+            "id": "768075",
+            "originalUrl": "https://shikimori.io/system/screenshots/original/322f84617f8990a7e7e870936db87858eb83ac20.jpg?1682251813",
+            "x166Url": "https://shikimori.io/system/screenshots/x166/322f84617f8990a7e7e870936db87858eb83ac20.jpg?1682251813",
+            "x332Url": "https://shikimori.io/system/screenshots/x332/322f84617f8990a7e7e870936db87858eb83ac20.jpg?1682251813"
+          },
+          {
+            "id": "768076",
+            "originalUrl": "https://shikimori.io/system/screenshots/original/5d4154847741a1e92360c851ee3ab84e72c7ff48.jpg?1682251814",
+            "x166Url": "https://shikimori.io/system/screenshots/x166/5d4154847741a1e92360c851ee3ab84e72c7ff48.jpg?1682251814",
+            "x332Url": "https://shikimori.io/system/screenshots/x332/5d4154847741a1e92360c851ee3ab84e72c7ff48.jpg?1682251814"
+          },
+          {
+            "id": "768077",
+            "originalUrl": "https://shikimori.io/system/screenshots/original/a0514e17e7fe2c5e52f298491d26d8ed113dfee1.jpg?1682251815",
+            "x166Url": "https://shikimori.io/system/screenshots/x166/a0514e17e7fe2c5e52f298491d26d8ed113dfee1.jpg?1682251815",
+            "x332Url": "https://shikimori.io/system/screenshots/x332/a0514e17e7fe2c5e52f298491d26d8ed113dfee1.jpg?1682251815"
+          },
+          {
+            "id": "768078",
+            "originalUrl": "https://shikimori.io/system/screenshots/original/3bcd3fb3c7aaf52a2a7d81074931671ae73ae70a.jpg?1682251816",
+            "x166Url": "https://shikimori.io/system/screenshots/x166/3bcd3fb3c7aaf52a2a7d81074931671ae73ae70a.jpg?1682251816",
+            "x332Url": "https://shikimori.io/system/screenshots/x332/3bcd3fb3c7aaf52a2a7d81074931671ae73ae70a.jpg?1682251816"
+          },
+          {
+            "id": "768079",
+            "originalUrl": "https://shikimori.io/system/screenshots/original/17101d9dcaab4b1f511eb9c3c1e41c5f7bac4f9b.jpg?1682251818",
+            "x166Url": "https://shikimori.io/system/screenshots/x166/17101d9dcaab4b1f511eb9c3c1e41c5f7bac4f9b.jpg?1682251818",
+            "x332Url": "https://shikimori.io/system/screenshots/x332/17101d9dcaab4b1f511eb9c3c1e41c5f7bac4f9b.jpg?1682251818"
+          },
+          {
+            "id": "768080",
+            "originalUrl": "https://shikimori.io/system/screenshots/original/5faf83963ecbd7a74c454ddc429bcd2bfb537ffa.jpg?1682251819",
+            "x166Url": "https://shikimori.io/system/screenshots/x166/5faf83963ecbd7a74c454ddc429bcd2bfb537ffa.jpg?1682251819",
+            "x332Url": "https://shikimori.io/system/screenshots/x332/5faf83963ecbd7a74c454ddc429bcd2bfb537ffa.jpg?1682251819"
+          },
+          {
+            "id": "768081",
+            "originalUrl": "https://shikimori.io/system/screenshots/original/a7a7a3154fa06401a875ddfb27d5f93310251a6e.jpg?1682251820",
+            "x166Url": "https://shikimori.io/system/screenshots/x166/a7a7a3154fa06401a875ddfb27d5f93310251a6e.jpg?1682251820",
+            "x332Url": "https://shikimori.io/system/screenshots/x332/a7a7a3154fa06401a875ddfb27d5f93310251a6e.jpg?1682251820"
+          },
+          {
+            "id": "768082",
+            "originalUrl": "https://shikimori.io/system/screenshots/original/9d2e8fd91d3f39b43e3eaf9d69e4f66b0ba07bb1.jpg?1682251821",
+            "x166Url": "https://shikimori.io/system/screenshots/x166/9d2e8fd91d3f39b43e3eaf9d69e4f66b0ba07bb1.jpg?1682251821",
+            "x332Url": "https://shikimori.io/system/screenshots/x332/9d2e8fd91d3f39b43e3eaf9d69e4f66b0ba07bb1.jpg?1682251821"
+          },
+          {
+            "id": "768083",
+            "originalUrl": "https://shikimori.io/system/screenshots/original/7cde41ad1cafe4319aad7df79f162f5eeef05e41.jpg?1682251822",
+            "x166Url": "https://shikimori.io/system/screenshots/x166/7cde41ad1cafe4319aad7df79f162f5eeef05e41.jpg?1682251822",
+            "x332Url": "https://shikimori.io/system/screenshots/x332/7cde41ad1cafe4319aad7df79f162f5eeef05e41.jpg?1682251822"
+          },
+          {
+            "id": "768084",
+            "originalUrl": "https://shikimori.io/system/screenshots/original/af978dcacdea3e276283b5d9b53b4864262dba23.jpg?1682251823",
+            "x166Url": "https://shikimori.io/system/screenshots/x166/af978dcacdea3e276283b5d9b53b4864262dba23.jpg?1682251823",
+            "x332Url": "https://shikimori.io/system/screenshots/x332/af978dcacdea3e276283b5d9b53b4864262dba23.jpg?1682251823"
+          },
+          {
+            "id": "768085",
+            "originalUrl": "https://shikimori.io/system/screenshots/original/d0e41540cfbc5fb34fa0cb51507ded1fbd1fe285.jpg?1682251824",
+            "x166Url": "https://shikimori.io/system/screenshots/x166/d0e41540cfbc5fb34fa0cb51507ded1fbd1fe285.jpg?1682251824",
+            "x332Url": "https://shikimori.io/system/screenshots/x332/d0e41540cfbc5fb34fa0cb51507ded1fbd1fe285.jpg?1682251824"
+          },
+          {
+            "id": "768086",
+            "originalUrl": "https://shikimori.io/system/screenshots/original/3813de4986e9e8faa0fc880f3c403b7ed147530b.jpg?1682251825",
+            "x166Url": "https://shikimori.io/system/screenshots/x166/3813de4986e9e8faa0fc880f3c403b7ed147530b.jpg?1682251825",
+            "x332Url": "https://shikimori.io/system/screenshots/x332/3813de4986e9e8faa0fc880f3c403b7ed147530b.jpg?1682251825"
+          },
+          {
+            "id": "768087",
+            "originalUrl": "https://shikimori.io/system/screenshots/original/331fcf2917c9aec90093c3d93e8cd2ed8b3617ee.jpg?1682251826",
+            "x166Url": "https://shikimori.io/system/screenshots/x166/331fcf2917c9aec90093c3d93e8cd2ed8b3617ee.jpg?1682251826",
+            "x332Url": "https://shikimori.io/system/screenshots/x332/331fcf2917c9aec90093c3d93e8cd2ed8b3617ee.jpg?1682251826"
+          },
+          {
+            "id": "768088",
+            "originalUrl": "https://shikimori.io/system/screenshots/original/9d2a1ff918bd5972fc1778d212967de4560459db.jpg?1682251828",
+            "x166Url": "https://shikimori.io/system/screenshots/x166/9d2a1ff918bd5972fc1778d212967de4560459db.jpg?1682251828",
+            "x332Url": "https://shikimori.io/system/screenshots/x332/9d2a1ff918bd5972fc1778d212967de4560459db.jpg?1682251828"
+          },
+          {
+            "id": "768089",
+            "originalUrl": "https://shikimori.io/system/screenshots/original/90e5faf165e16aac9cc6d6a98ee2b7d18bc3747d.jpg?1682251829",
+            "x166Url": "https://shikimori.io/system/screenshots/x166/90e5faf165e16aac9cc6d6a98ee2b7d18bc3747d.jpg?1682251829",
+            "x332Url": "https://shikimori.io/system/screenshots/x332/90e5faf165e16aac9cc6d6a98ee2b7d18bc3747d.jpg?1682251829"
+          },
+          {
+            "id": "768090",
+            "originalUrl": "https://shikimori.io/system/screenshots/original/f066becb90568af1d3132143425e430687dd3e62.jpg?1682251830",
+            "x166Url": "https://shikimori.io/system/screenshots/x166/f066becb90568af1d3132143425e430687dd3e62.jpg?1682251830",
+            "x332Url": "https://shikimori.io/system/screenshots/x332/f066becb90568af1d3132143425e430687dd3e62.jpg?1682251830"
+          },
+          {
+            "id": "768091",
+            "originalUrl": "https://shikimori.io/system/screenshots/original/d4fcf1a4c97f59bbd07ec9841b5762d85c8f21fc.jpg?1682251831",
+            "x166Url": "https://shikimori.io/system/screenshots/x166/d4fcf1a4c97f59bbd07ec9841b5762d85c8f21fc.jpg?1682251831",
+            "x332Url": "https://shikimori.io/system/screenshots/x332/d4fcf1a4c97f59bbd07ec9841b5762d85c8f21fc.jpg?1682251831"
+          },
+          {
+            "id": "768092",
+            "originalUrl": "https://shikimori.io/system/screenshots/original/102f9e6a44d6a10f7581115a180d3b8f13dcb1b8.jpg?1682251833",
+            "x166Url": "https://shikimori.io/system/screenshots/x166/102f9e6a44d6a10f7581115a180d3b8f13dcb1b8.jpg?1682251833",
+            "x332Url": "https://shikimori.io/system/screenshots/x332/102f9e6a44d6a10f7581115a180d3b8f13dcb1b8.jpg?1682251833"
+          },
+          {
+            "id": "768093",
+            "originalUrl": "https://shikimori.io/system/screenshots/original/88173c74b3b9ed87aef007e61995d73ee0c45ab3.jpg?1682251834",
+            "x166Url": "https://shikimori.io/system/screenshots/x166/88173c74b3b9ed87aef007e61995d73ee0c45ab3.jpg?1682251834",
+            "x332Url": "https://shikimori.io/system/screenshots/x332/88173c74b3b9ed87aef007e61995d73ee0c45ab3.jpg?1682251834"
+          },
+          {
+            "id": "768094",
+            "originalUrl": "https://shikimori.io/system/screenshots/original/c18409a40009ab8d24a8070d633dd8611ed509d8.jpg?1682251835",
+            "x166Url": "https://shikimori.io/system/screenshots/x166/c18409a40009ab8d24a8070d633dd8611ed509d8.jpg?1682251835",
+            "x332Url": "https://shikimori.io/system/screenshots/x332/c18409a40009ab8d24a8070d633dd8611ed509d8.jpg?1682251835"
+          },
+          {
+            "id": "768095",
+            "originalUrl": "https://shikimori.io/system/screenshots/original/83160f86dfc25a930ab6dc1067af30198340c1e2.jpg?1682251836",
+            "x166Url": "https://shikimori.io/system/screenshots/x166/83160f86dfc25a930ab6dc1067af30198340c1e2.jpg?1682251836",
+            "x332Url": "https://shikimori.io/system/screenshots/x332/83160f86dfc25a930ab6dc1067af30198340c1e2.jpg?1682251836"
+          },
+          {
+            "id": "768096",
+            "originalUrl": "https://shikimori.io/system/screenshots/original/1693d807615412e6d6e8ce4600b4e18573a9688e.jpg?1682251837",
+            "x166Url": "https://shikimori.io/system/screenshots/x166/1693d807615412e6d6e8ce4600b4e18573a9688e.jpg?1682251837",
+            "x332Url": "https://shikimori.io/system/screenshots/x332/1693d807615412e6d6e8ce4600b4e18573a9688e.jpg?1682251837"
+          },
+          {
+            "id": "768097",
+            "originalUrl": "https://shikimori.io/system/screenshots/original/8d0c49cabd248e1740b21fa3bfea59cdd865a2b3.jpg?1682251842",
+            "x166Url": "https://shikimori.io/system/screenshots/x166/8d0c49cabd248e1740b21fa3bfea59cdd865a2b3.jpg?1682251842",
+            "x332Url": "https://shikimori.io/system/screenshots/x332/8d0c49cabd248e1740b21fa3bfea59cdd865a2b3.jpg?1682251842"
+          },
+          {
+            "id": "768098",
+            "originalUrl": "https://shikimori.io/system/screenshots/original/65ec8f20a184d0d920cb27ccbce22818cae21f19.jpg?1682251844",
+            "x166Url": "https://shikimori.io/system/screenshots/x166/65ec8f20a184d0d920cb27ccbce22818cae21f19.jpg?1682251844",
+            "x332Url": "https://shikimori.io/system/screenshots/x332/65ec8f20a184d0d920cb27ccbce22818cae21f19.jpg?1682251844"
+          },
+          {
+            "id": "768099",
+            "originalUrl": "https://shikimori.io/system/screenshots/original/9e68c9c3d547ad135ed59ff3629b5ff46017af8b.jpg?1682251845",
+            "x166Url": "https://shikimori.io/system/screenshots/x166/9e68c9c3d547ad135ed59ff3629b5ff46017af8b.jpg?1682251845",
+            "x332Url": "https://shikimori.io/system/screenshots/x332/9e68c9c3d547ad135ed59ff3629b5ff46017af8b.jpg?1682251845"
+          },
+          {
+            "id": "768100",
+            "originalUrl": "https://shikimori.io/system/screenshots/original/6973a060649c501c413f3db312860d9743e55713.jpg?1682251846",
+            "x166Url": "https://shikimori.io/system/screenshots/x166/6973a060649c501c413f3db312860d9743e55713.jpg?1682251846",
+            "x332Url": "https://shikimori.io/system/screenshots/x332/6973a060649c501c413f3db312860d9743e55713.jpg?1682251846"
+          },
+          {
+            "id": "768101",
+            "originalUrl": "https://shikimori.io/system/screenshots/original/de9e2e8f9dd856140521864390dc98ad35b6073e.jpg?1682251847",
+            "x166Url": "https://shikimori.io/system/screenshots/x166/de9e2e8f9dd856140521864390dc98ad35b6073e.jpg?1682251847",
+            "x332Url": "https://shikimori.io/system/screenshots/x332/de9e2e8f9dd856140521864390dc98ad35b6073e.jpg?1682251847"
+          }
+        ],
+        "scoresStats": [
+          {
+            "score": 10,
+            "count": 7369
+          },
+          {
+            "score": 9,
+            "count": 4839
+          },
+          {
+            "score": 8,
+            "count": 8816
+          },
+          {
+            "score": 7,
+            "count": 6798
+          },
+          {
+            "score": 6,
+            "count": 2656
+          },
+          {
+            "score": 5,
+            "count": 968
+          },
+          {
+            "score": 4,
+            "count": 307
+          },
+          {
+            "score": 3,
+            "count": 129
+          },
+          {
+            "score": 2,
+            "count": 67
+          },
+          {
+            "score": 1,
+            "count": 112
+          }
+        ],
+        "statusesStats": [
+          {
+            "status": "planned",
+            "count": 5601
+          },
+          {
+            "status": "completed",
+            "count": 74736
+          },
+          {
+            "status": "watching",
+            "count": 326
+          },
+          {
+            "status": "dropped",
+            "count": 245
+          },
+          {
+            "status": "on_hold",
+            "count": 181
+          }
+        ],
+        "description": "Дополнительный эпизод аниме-сериала «[Этот замечательный мир!]», выпущенный в комплекте с девятым томом одноимённой новеллы.",
+        "descriptionHtml": "<div class=\"b-text_with_paragraphs\">Дополнительный эпизод аниме-сериала «<a href=\"https://shikimori.io/animes/x30831-kono-subarashii-sekai-ni-shukufuku-wo\" title=\"Kono Subarashii Sekai ni Shukufuku wo!\" class=\"bubbled b-link\" data-tooltip_url=\"https://shikimori.io/animes/x30831-kono-subarashii-sekai-ni-shukufuku-wo/tooltip\" data-attrs=\"{&quot;id&quot;:30831,&quot;type&quot;:&quot;anime&quot;,&quot;name&quot;:&quot;Kono Subarashii Sekai ni Shukufuku wo!&quot;,&quot;russian&quot;:&quot;Этот замечательный мир!&quot;}\">Этот замечательный мир!</a>», выпущенный в комплекте с девятым томом одноимённой новеллы.</div>",
+        "descriptionSource": null
+      }
+    ]
+  }
+}
