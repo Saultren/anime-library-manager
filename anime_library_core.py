@@ -40,6 +40,11 @@ def setup_logging():
             logging.StreamHandler()
         ]
     )
+    
+    # Подавляем излишне подробные логи от qasync и asyncio
+    logging.getLogger('qasync').setLevel(logging.WARNING)
+    logging.getLogger('asyncio').setLevel(logging.WARNING)
+    
     logging.info("=" * 80)
     logging.info("Запуск ядра Anime Library Manager")
     logging.info(f"Python: {sys.version}")
