@@ -379,6 +379,10 @@ class MainWindow(QMainWindow):
                 if widget and widget.anime_id == anime_id:
                     widget.update_poster(poster_path)
                     break
+        
+        # Обновляем открытое модальное окно если оно есть для этого аниме
+        if self.current_modal and self.current_modal.anime_id == anime_id:
+            self.current_modal.update_poster_from_path(poster_path)
 
     def _set_buttons_enabled(self, enabled: bool):
         """Блокировка/разблокировка всех управляющих элементов на время операций"""
