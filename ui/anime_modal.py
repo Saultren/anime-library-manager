@@ -173,11 +173,15 @@ class AnimeModal(QWidget):
         metadata = entry.metadata or {}
         title_ru = QLabel(metadata.get('title', {}).get('russian', entry.clean_name))
         title_ru.setObjectName("titleRU")
+        title_ru.setWordWrap(True)  # Включаем перенос строк
+        title_ru.setSizePolicy(QSizePolicy.Preferred, QSizePolicy.MinimumExpanding)
         right_layout.addWidget(title_ru)
 
         # Заголовок JP
         title_jp = QLabel(metadata.get('title', {}).get('native', ''))
         title_jp.setObjectName("titleJP")
+        title_jp.setWordWrap(True)  # Включаем перенос строк
+        title_jp.setSizePolicy(QSizePolicy.Preferred, QSizePolicy.MinimumExpanding)
         right_layout.addWidget(title_jp)
 
         # Инфо-блоки
