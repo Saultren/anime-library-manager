@@ -8,7 +8,7 @@
 
 from PySide6.QtWidgets import QWidget, QSizePolicy
 from PySide6.QtCore import QTimer, Qt, QRectF
-from PySide6.QtGui import QColor, QPalette, QPainter, QLinearGradient, QBrush
+from PySide6.QtGui import QColor, QPalette, QPainter, QLinearGradient, QBrush, QPainterPath
 
 
 class SkeletonWidget(QWidget):
@@ -57,6 +57,15 @@ class SkeletonWidget(QWidget):
         self.setPalette(palette)
         self.setAutoFillBackground(False)  # Отключаем автозаполнение, рисуем сами
     
+    def _on_shimmer_tick(self):
+        """Тик анимации переливания."""
+        if not self._is_loading:
+            return
+        
+        # Двигаем градиент от -0.2 до 1.2 (чтобы блик полностью проходил через виджет)
+        self._gradient_offset = (self._gradient_offset + 0.03) % 1.4
+        self.update()  # Перерисовываем виджет
+    
     def paintEvent(self, event):
         """Отрисовка скелетона с градиентом и скруглениями."""
         if not self._is_loading:
@@ -75,24 +84,19 @@ class SkeletonWidget(QWidget):
         base_color = self._base_color or QColor("#2a2a2a")
         highlight = base_color.lighter(130)
         
+        # Нормализуем offset для расчета позиций (в диапазоне 0..1 для setColorAt)
+        offset = self._gradient_offset
+        
         # Градиент для эффекта переливания
         gradient = QLinearGradient(0, 0, self.width(), self.height())
         gradient.setColorAt(0.0, base_color)
-        gradient.setColorAt(max(0.0, self._gradient_offset - 0.2), base_color)
-        gradient.setColorAt(self._gradient_offset, highlight)
-        gradient.setColorAt(min(1.0, self._gradient_offset + 0.2), base_color)
+        gradient.setColorAt(max(0.0, min(1.0, offset - 0.2)), base_color)
+        gradient.setColorAt(max(0.0, min(1.0, offset)), highlight)
+        gradient.setColorAt(max(0.0, min(1.0, offset + 0.2)), base_color)
         gradient.setColorAt(1.0, base_color)
         
         painter.fillRect(self.rect(), QBrush(gradient))
         painter.end()
-    
-    def _on_shimmer_tick(self):
-        """Тик анимации переливания."""
-        if not self._is_loading:
-            return
-        
-        self._gradient_offset = (self._gradient_offset + 0.03) % 1.2
-        self.update()  # Перерисовываем виджет
     
     def start_loading(self):
         """Запуск анимации загрузки (показать скелетон)."""
