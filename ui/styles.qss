@@ -308,3 +308,10 @@ QLabel#statusLabel {
 #torrentMenu::item:hover {
     background-color: #404040;
 }
+
+/* ==================== СКЕЛЕТОН ==================== */
+
+#skeletonWidget {
+    background-color: #2a2a2a;
+    border-radius: 8px;
+}
