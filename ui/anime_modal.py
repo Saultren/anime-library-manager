@@ -6,6 +6,8 @@ from PySide6.QtWidgets import (
 from PySide6.QtCore import Qt, QSize, Signal, QPropertyAnimation, QEasingCurve, Property, QParallelAnimationGroup, QPoint
 from PySide6.QtGui import QPixmap, QPainter, QPainterPath, QTransform, QTextOption
 
+from ui.skeleton import SkeletonWidget
+
 
 class AnimeModal(QWidget):
     closed = Signal()
@@ -136,9 +138,14 @@ class AnimeModal(QWidget):
         top_layout = QHBoxLayout()
         top_layout.setSpacing(self.DEFAULT_MARGIN)
 
-        # Постер
+        # ===== СКЕЛЕТОН ДЛЯ ПОСТЕРА =====
         POSTER_WIDTH = 320
         POSTER_HEIGHT = 480
+        self.poster_skeleton = SkeletonWidget(self.center_block)
+        self.poster_skeleton.setFixedSize(QSize(POSTER_WIDTH, POSTER_HEIGHT))
+        self.poster_skeleton.hide()  # Скрыт по умолчанию
+        
+        # Постер (поверх скелетона в layout)
         self.poster_label = QLabel()
         self.poster_label.setObjectName("posterLabel")
         self.poster_label.setAlignment(Qt.AlignTop | Qt.AlignLeft)
@@ -155,6 +162,18 @@ class AnimeModal(QWidget):
         else:
             self.poster_label.setText("Нет постера")
 
+        # Если метаданных нет — показываем скелетон сразу
+        metadata = entry.metadata or {}
+        has_metadata = bool(metadata)
+        
+        if not has_metadata:
+            self.poster_skeleton.start_loading()
+            self.poster_label.hide()
+        else:
+            self.poster_skeleton.hide()
+            self.poster_label.show()
+
+        top_layout.addWidget(self.poster_skeleton)
         top_layout.addWidget(self.poster_label)
 
         # Фиксированная ширина для контента (чтобы описание не растягивалось)
@@ -169,23 +188,51 @@ class AnimeModal(QWidget):
         right_layout = QVBoxLayout(right_container)
         right_layout.setSpacing(self.DEFAULT_MARGIN)
 
+        # ===== СКЕЛЕТОНЫ ДЛЯ ТЕКСТОВЫХ ПОЛЕЙ =====
         # Заголовок RU
-        metadata = entry.metadata or {}
+        self.title_ru_skeleton = SkeletonWidget(right_container)
+        self.title_ru_skeleton.setFixedHeight(40)
+        self.title_ru_skeleton.hide()
+        
         title_ru = QLabel(metadata.get('title', {}).get('russian', entry.clean_name))
         title_ru.setObjectName("titleRU")
-        title_ru.setWordWrap(True)  # Включаем перенос строк
+        title_ru.setWordWrap(True)
         title_ru.setSizePolicy(QSizePolicy.Preferred, QSizePolicy.MinimumExpanding)
+        
+        if not has_metadata:
+            self.title_ru_skeleton.start_loading()
+            title_ru.hide()
+        else:
+            self.title_ru_skeleton.hide()
+            title_ru.show()
+            
+        right_layout.addWidget(self.title_ru_skeleton)
         right_layout.addWidget(title_ru)
+        self.title_ru_label = title_ru  # Сохраняем ссылку для обновления
 
         # Заголовок JP
+        self.title_jp_skeleton = SkeletonWidget(right_container)
+        self.title_jp_skeleton.setFixedHeight(30)
+        self.title_jp_skeleton.hide()
+        
         title_jp = QLabel(metadata.get('title', {}).get('native', ''))
         title_jp.setObjectName("titleJP")
-        title_jp.setWordWrap(True)  # Включаем перенос строк
+        title_jp.setWordWrap(True)
         title_jp.setSizePolicy(QSizePolicy.Preferred, QSizePolicy.MinimumExpanding)
+        
+        if not has_metadata:
+            self.title_jp_skeleton.start_loading()
+            title_jp.hide()
+        else:
+            self.title_jp_skeleton.hide()
+            title_jp.show()
+            
+        right_layout.addWidget(self.title_jp_skeleton)
         right_layout.addWidget(title_jp)
+        self.title_jp_label = title_jp  # Сохраняем ссылку для обновления
 
-        # Инфо-блоки
-        def add_info_block(label_text, value_text):
+        # Инфо-блоки со скелетонами
+        def add_info_block_with_skeleton(label_text, value_text, parent_layout):
             info_row = QWidget()
             info_row.setObjectName("infoRow")
             info_row.setAttribute(Qt.WA_TranslucentBackground)
@@ -204,19 +251,45 @@ class AnimeModal(QWidget):
             layout.addWidget(lbl_label)
             layout.addWidget(lbl_value)
             layout.addStretch()
+            
+            # Скелетон для значения
+            skeleton = SkeletonWidget(info_row)
+            skeleton.setFixedHeight(20)
+            skeleton.hide()
+            
+            if not has_metadata:
+                skeleton.start_loading()
+                lbl_value.hide()
+            else:
+                skeleton.hide()
+                lbl_value.show()
+            
+            parent_layout.addWidget(skeleton)
+            parent_layout.addWidget(info_row)
+            return lbl_value, skeleton
 
-            return info_row
+        self.score_label, self.score_skeleton = add_info_block_with_skeleton(
+            "Рейтинг", str(metadata.get('averageScore', '-')), right_layout
+        )
+        self.genres_label, self.genres_skeleton = add_info_block_with_skeleton(
+            "Жанры", ", ".join(metadata.get('genres', [])), right_layout
+        )
+        self.year_label, self.year_skeleton = add_info_block_with_skeleton(
+            "Год", str(metadata.get('year', '-')), right_layout
+        )
+        self.episodes_label, self.episodes_skeleton = add_info_block_with_skeleton(
+            "Серий", str(len(entry.video_files)), right_layout
+        )
 
-        right_layout.addWidget(add_info_block("Рейтинг", str(metadata.get('averageScore', '-'))))
-        right_layout.addWidget(add_info_block("Жанры", ", ".join(metadata.get('genres', []))))
-        right_layout.addWidget(add_info_block("Год", str(metadata.get('year', '-'))))
-        right_layout.addWidget(add_info_block("Серий", str(len(entry.video_files))))
-
-        # Описание (QTextEdit для стабильности)
+        # Описание со скелетоном
+        self.description_skeleton = SkeletonWidget(right_container)
+        self.description_skeleton.setFixedHeight(220)
+        self.description_skeleton.hide()
+        
         description = QTextEdit(metadata.get('description', 'Описание недоступно'))
         description.setObjectName("description")
         description.setReadOnly(True)
-        description.setWordWrapMode(QTextOption.WrapMode.WordWrap)  # ПРОСТО Qt.WordWrap
+        description.setWordWrapMode(QTextOption.WrapMode.WordWrap)
         description.setFixedHeight(220)
         description.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
         description.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
@@ -229,7 +302,17 @@ class AnimeModal(QWidget):
                 line-height: 1.5;
             }
         """)
+        
+        if not has_metadata:
+            self.description_skeleton.start_loading()
+            description.hide()
+        else:
+            self.description_skeleton.hide()
+            description.show()
+        
+        right_layout.addWidget(self.description_skeleton)
         right_layout.addWidget(description)
+        self.description_edit = description  # Сохраняем ссылку для обновления
 
         top_layout.addWidget(right_container)
         main_layout.addLayout(top_layout)
@@ -329,76 +412,40 @@ class AnimeModal(QWidget):
         """Обновление интерфейса модального окна после загрузки метаданных"""
         if not metadata:
             return
-            
-        # Находим все QLabel и QTextEdit в layout
-        title_ru = None
-        title_jp = None
-        score_label = None
-        genres_label = None
-        year_label = None
-        description_edit = None
+
+        # Останавливаем все скелетоны и показываем контент
+        self.poster_skeleton.stop_loading()
+        self.poster_label.show()
         
-        right_container = None
-        # Ищем правый контейнер через иерархию
-        for i in range(self.center_block.layout().count()):
-            layout_item = self.center_block.layout().itemAt(i)
-            if layout_item and layout_item.layout():
-                top_layout = layout_item.layout()
-                if top_layout.count() >= 2:
-                    widget = top_layout.itemAt(1).widget()
-                    if widget and isinstance(widget, QWidget):
-                        right_container = widget
-                        break
+        self.title_ru_skeleton.stop_loading()
+        self.title_ru_label.show()
         
-        if not right_container or not right_container.layout():
-            return
-            
-        # Проходим по виджетам в правом контейнере
-        widgets_to_update = []
-        for i in range(right_container.layout().count()):
-            item = right_container.layout().itemAt(i)
-            if item and item.widget():
-                widgets_to_update.append(item.widget())
+        self.title_jp_skeleton.stop_loading()
+        self.title_jp_label.show()
         
-        # Обновляем заголовки (первые два QLabel)
-        if len(widgets_to_update) >= 2:
-            title_ru = widgets_to_update[0]
-            title_jp = widgets_to_update[1]
-            
-            if isinstance(title_ru, QLabel):
-                title_ru.setText(metadata.get('title', {}).get('russian', self.entry.clean_name))
-            if isinstance(title_jp, QLabel):
-                title_jp.setText(metadata.get('title', {}).get('native', ''))
+        self.score_skeleton.stop_loading()
+        self.score_label.show()
         
-        # Обновляем инфо-блоки (следующие 4 виджета: рейтинг, жанры, год, серии)
-        if len(widgets_to_update) >= 6:
-            # Рейтинг (3-й виджет, индекс 2)
-            score_widget = widgets_to_update[2]
-            if score_widget and score_widget.layout() and score_widget.layout().count() >= 2:
-                value_label = score_widget.layout().itemAt(1).widget()
-                if isinstance(value_label, QLabel):
-                    value_label.setText(str(metadata.get('averageScore', '-')))
-            
-            # Жанры (4-й виджет, индекс 3)
-            genres_widget = widgets_to_update[3]
-            if genres_widget and genres_widget.layout() and genres_widget.layout().count() >= 2:
-                value_label = genres_widget.layout().itemAt(1).widget()
-                if isinstance(value_label, QLabel):
-                    value_label.setText(", ".join(metadata.get('genres', [])))
-            
-            # Год (5-й виджет, индекс 4)
-            year_widget = widgets_to_update[4]
-            if year_widget and year_widget.layout() and year_widget.layout().count() >= 2:
-                value_label = year_widget.layout().itemAt(1).widget()
-                if isinstance(value_label, QLabel):
-                    value_label.setText(str(metadata.get('year', '-')))
+        self.genres_skeleton.stop_loading()
+        self.genres_label.show()
         
-        # Описание (QTextEdit, обычно 6-й виджет, индекс 5)
-        if len(widgets_to_update) >= 6:
-            desc_widget = widgets_to_update[5]
-            if isinstance(desc_widget, QTextEdit):
-                desc_widget.setText(metadata.get('description', 'Описание недоступно'))
+        self.year_skeleton.stop_loading()
+        self.year_label.show()
         
+        self.episodes_skeleton.stop_loading()
+        self.episodes_label.show()
+        
+        self.description_skeleton.stop_loading()
+        self.description_edit.show()
+
+        # Обновляем тексты
+        self.title_ru_label.setText(metadata.get('title', {}).get('russian', self.entry.clean_name))
+        self.title_jp_label.setText(metadata.get('title', {}).get('native', ''))
+        self.score_label.setText(str(metadata.get('averageScore', '-')))
+        self.genres_label.setText(", ".join(metadata.get('genres', [])))
+        self.year_label.setText(str(metadata.get('year', '-')))
+        self.description_edit.setText(metadata.get('description', 'Описание недоступно'))
+
         # Обновляем постер если есть путь
         poster_path = self.entry.poster_path
         if poster_path:

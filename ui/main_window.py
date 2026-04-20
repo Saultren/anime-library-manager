@@ -369,17 +369,7 @@ class MainWindow(QMainWindow):
         if self.current_modal and self.current_modal.anime_id == anime_id:
             self.current_modal.update_from_metadata(metadata)
         
-        # Если модалка не открыта, но была запрошена (аниме без метаданных) - открываем её
-        elif not self.current_modal:
-            entry = self.library.anime_entries.get(anime_id)
-            if entry:
-                # Обновляем entry.metadata перед открытием
-                entry.metadata = metadata
-                self.current_modal = AnimeModal(entry, self)
-                self.current_modal.closed.connect(self._on_modal_closed)
-                self.current_modal.watch_clicked.connect(self._on_watch_clicked)
-                self.current_modal.show()
-                logging.info(f"Открыто модальное окно: {entry.clean_name}")
+        # Больше не открываем модалку здесь — она открывается сразу в show_anime_modal
 
     def _on_poster_loaded(self, anime_id: str, poster_path: str):
         """Обновление постера через QGraphicsScene"""
@@ -468,18 +458,17 @@ class MainWindow(QMainWindow):
         
         entry = self.library.anime_entries.get(anime_id)
         if entry:
-            # Если метаданных нет - сначала загружаем их, потом открываем модалку
-            if not entry.metadata:
-                # Запускаем загрузку и ждем завершения перед открытием окна
-                self.library.load_metadata(anime_id)
-                # Модалка откроется автоматически в _on_metadata_loaded после получения данных
-                return
-            
+            # Всегда открываем модалку сразу (со скелетонами или данными)
             self.current_modal = AnimeModal(entry, self)
             self.current_modal.closed.connect(self._on_modal_closed)
             self.current_modal.watch_clicked.connect(self._on_watch_clicked)
             self.current_modal.show()
             logging.info(f"Открыто модальное окно: {entry.clean_name}")
+            
+            # Если метаданных нет — запускаем загрузку параллельно
+            # Модалка сама подпишется на обновление через skeleton.stop_loading()
+            if not entry.metadata:
+                self.library.load_metadata(anime_id)
         else:
             logging.error(f"Аниме с ID {anime_id} не найдено")
 
