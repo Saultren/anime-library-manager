@@ -1,4 +1,5 @@
 
+import logging
 from PySide6.QtWidgets import (
     QWidget, QVBoxLayout, QHBoxLayout, QLabel,
     QPushButton, QSizePolicy, QSpacerItem, QGraphicsOpacityEffect, QTextEdit
@@ -450,7 +451,7 @@ class AnimeModal(QWidget):
         self.year_label.setText(str(metadata.get('year', '-')))
         self.description_edit.setText(metadata.get('description', 'Описание недоступно'))
 
-        # Обновляем постер если есть путь
+        # Обновляем постер если есть путь в entry
         poster_path = self.entry.poster_path
         if poster_path:
             source_pixmap = QPixmap(poster_path)
@@ -462,3 +463,24 @@ class AnimeModal(QWidget):
                 )
                 self.poster_label.setPixmap(cropped_pixmap)
                 self.poster_label.setText("")
+    
+    def update_poster_from_path(self, poster_path: str):
+        """Обновление только постера из пути (вызывается при загрузке постера)"""
+        if not poster_path:
+            return
+        
+        # Проверяем что модалка ещё существует и открыта для этого аниме
+        if not self.poster_label or not self.poster_label.isVisible():
+            logging.debug(f"Модалка для {self.anime_id} не готова к обновлению постера")
+            return
+        
+        source_pixmap = QPixmap(poster_path)
+        if not source_pixmap.isNull():
+            cropped_pixmap = self._create_cropped_rounded_pixmap(
+                source_pixmap,
+                self.poster_label.size(),
+                radius=12
+            )
+            self.poster_label.setPixmap(cropped_pixmap)
+            self.poster_label.setText("")
+            logging.info(f"Постер обновлен в модалке для {self.anime_id}")
