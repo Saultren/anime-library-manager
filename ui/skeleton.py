@@ -7,13 +7,13 @@
 """
 
 from PySide6.QtWidgets import QWidget, QSizePolicy
-from PySide6.QtCore import QTimer, Qt, QRectF
-from PySide6.QtGui import QColor, QPalette, QPainter, QLinearGradient, QBrush, QPainterPath
+from PySide6.QtCore import QTimer, Qt, QRectF, QPropertyAnimation, QEasingCurve, Property
+from PySide6.QtGui import QColor, QPalette, QPainter, QPainterPath, QBrush
 
 
 class SkeletonWidget(QWidget):
     """
-    Универсальный скелетон-заглушка с анимацией переливания.
+    Универсальный скелетон-заглушка с анимацией пульсации яркости.
     
     Автоматически занимает всё доступное пространство родителя.
     Поддерживает ручную настройку ориентации для сложных случаев.
@@ -29,6 +29,7 @@ class SkeletonWidget(QWidget):
         self._orientation = orientation
         self._is_loading = False
         self._radius = radius  # Радиус скругления углов
+        self._pulse_value = 1.0  # Текущее значение пульсации (0.85 - 1.15)
         
         # Настройка внешнего вида
         self.setObjectName("skeletonWidget")
@@ -44,11 +45,13 @@ class SkeletonWidget(QWidget):
             # Цвет будет взят из styles.qss
             self._base_color = None
         
-        # Анимация переливания через градиент в paintEvent (эффективнее)
-        self._gradient_offset = 0.0
-        self.shimmer_timer = QTimer(self)
-        self.shimmer_timer.timeout.connect(self._on_shimmer_tick)
-        self.shimmer_timer.setInterval(80)  # ~12 FPS для экономии ресурсов
+        # Анимация пульсации через QPropertyAnimation
+        self._pulse_animation = QPropertyAnimation(self, b"pulseValue")
+        self._pulse_animation.setDuration(1200)  # 1.2 секунды
+        self._pulse_animation.setStartValue(0.85)
+        self._pulse_animation.setEndValue(1.15)
+        self._pulse_animation.setLoopCount(-1)  # Бесконечный цикл
+        self._pulse_animation.setEasingCurve(QEasingCurve.InOutSine)  # Замедление на концах
     
     def _apply_color_to_palette(self, color: QColor):
         """Применяет цвет к палитре виджета."""
@@ -57,17 +60,19 @@ class SkeletonWidget(QWidget):
         self.setPalette(palette)
         self.setAutoFillBackground(False)  # Отключаем автозаполнение, рисуем сами
     
-    def _on_shimmer_tick(self):
-        """Тик анимации переливания."""
-        if not self._is_loading:
-            return
-        
-        # Двигаем градиент от -0.2 до 1.2 (чтобы блик полностью проходил через виджет)
-        self._gradient_offset = (self._gradient_offset + 0.03) % 1.4
-        self.update()  # Перерисовываем виджет
+    @Property(float)
+    def pulseValue(self):
+        """Свойство для анимации пульсации."""
+        return self._pulse_value
+    
+    @pulseValue.setter
+    def pulseValue(self, value):
+        """Сеттер свойства пульсации."""
+        self._pulse_value = value
+        self.update()  # Перерисовываем виджет при изменении значения
     
     def paintEvent(self, event):
-        """Отрисовка скелетона с градиентом и скруглениями."""
+        """Отрисовка скелетона с пульсацией яркости и скруглениями."""
         if not self._is_loading:
             return
         
@@ -82,27 +87,18 @@ class SkeletonWidget(QWidget):
         
         # Базовый цвет
         base_color = self._base_color or QColor("#2a2a2a")
-        highlight = base_color.lighter(130)
         
-        # Нормализуем offset для расчета позиций (в диапазоне 0..1 для setColorAt)
-        offset = self._gradient_offset
+        # Применяем пульсацию к яркости
+        pulsated_color = base_color.lighter(int(100 * self._pulse_value))
         
-        # Градиент для эффекта переливания
-        gradient = QLinearGradient(0, 0, self.width(), self.height())
-        gradient.setColorAt(0.0, base_color)
-        gradient.setColorAt(max(0.0, min(1.0, offset - 0.2)), base_color)
-        gradient.setColorAt(max(0.0, min(1.0, offset)), highlight)
-        gradient.setColorAt(max(0.0, min(1.0, offset + 0.2)), base_color)
-        gradient.setColorAt(1.0, base_color)
-        
-        painter.fillRect(self.rect(), QBrush(gradient))
+        painter.fillRect(self.rect(), QBrush(pulsated_color))
         painter.end()
     
     def start_loading(self):
         """Запуск анимации загрузки (показать скелетон)."""
         self.show()
         self._is_loading = True
-        self._gradient_offset = 0.0
+        self._pulse_value = 1.0
         
         # Если цвет не задан явно, пробуем получить из палитры
         if self._base_color is None:
@@ -110,12 +106,12 @@ class SkeletonWidget(QWidget):
             if not self._base_color.isValid():
                 self._base_color = QColor("#2a2a2a")  # fallback
         
-        self.shimmer_timer.start()
+        self._pulse_animation.start()
     
     def stop_loading(self):
         """Остановка анимации загрузки (скрыть скелетон)."""
         self._is_loading = False
-        self.shimmer_timer.stop()
+        self._pulse_animation.stop()
         self.hide()
     
     def is_loading(self) -> bool:
