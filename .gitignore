@@ -1,19 +1,8 @@
 ```
-# Python
-__pycache__/
+# Compiled Python files
 *.pyc
-*.pyo
-*.pyd
+__pycache__/
 
-# IDE
-.vscode/
-.idea/
-
-# Logs
+# Original rules preserved
 *.log
-
-# Environment
-.env
-.env.local
-*.env.*
 ```

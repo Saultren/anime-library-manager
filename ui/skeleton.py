@@ -1,5 +1,5 @@
 """
-Универсальный виджет-скелетон с анимацией переливания (shimmer effect).
+Универсальный виджет-скелетон с анимацией пульсации (pulse effect).
 Используется как заглушка во время загрузки контента.
 Автоматически подстраивается под размеры родительского виджета.
 
@@ -7,29 +7,24 @@
 """
 
 from PySide6.QtWidgets import QWidget, QSizePolicy
-from PySide6.QtCore import QTimer, Qt, QRectF, QPropertyAnimation, QEasingCurve, Property, QSequentialAnimationGroup
-from PySide6.QtGui import QColor, QPalette, QPainter, QPainterPath, QBrush
+from PySide6.QtCore import QTimer, Qt, QPropertyAnimation, QEasingCurve, Property
+from PySide6.QtGui import QColor, QPalette, QPainter
 
 
 class SkeletonWidget(QWidget):
     """
-    Универсальный скелетон-заглушка с анимацией пульсации яркости.
+    Универсальный скелетон-заглушка с плавной анимацией пульсации (pulse effect).
     
     Автоматически занимает всё доступное пространство родителя.
-    Поддерживает ручную настройку ориентации для сложных случаев.
+    Оптимизированная анимация без лагов через QPropertyAnimation.
     """
     
-    ORIENTATION_AUTO = "auto"
-    ORIENTATION_HORIZONTAL = "horizontal"
-    ORIENTATION_VERTICAL = "vertical"
-    
-    def __init__(self, parent=None, orientation=ORIENTATION_AUTO, color=None, radius=0):
+    def __init__(self, parent=None, color=None, radius=0):
         super().__init__(parent)
         
-        self._orientation = orientation
         self._is_loading = False
         self._radius = radius  # Радиус скругления углов
-        self._pulse_value = 1.0  # Текущее значение пульсации (0.85 - 1.15)
+        self._pulse_value = 0.0  # Значение пульсации (0.0 - 1.0)
         
         # Настройка внешнего вида
         self.setObjectName("skeletonWidget")
@@ -45,33 +40,13 @@ class SkeletonWidget(QWidget):
             # Цвет будет взят из styles.qss
             self._base_color = None
         
-        # Анимация пульсации через QPropertyAnimation - последовательность: 1.0 -> 1.15 -> 0.85 -> 1.0
-        self._pulse_animation = QSequentialAnimationGroup(self)
-        
-        # Первая фаза: 1.0 -> 1.15 (подъем к максимуму)
-        anim_up1 = QPropertyAnimation(self, b"pulseValue")
-        anim_up1.setDuration(400)
-        anim_up1.setStartValue(1.0)
-        anim_up1.setEndValue(1.15)
-        anim_up1.setEasingCurve(QEasingCurve.InOutSine)
-        
-        # Вторая фаза: 1.15 -> 0.85 (спуск к минимуму)
-        anim_down = QPropertyAnimation(self, b"pulseValue")
-        anim_down.setDuration(800)
-        anim_down.setStartValue(1.15)
-        anim_down.setEndValue(0.85)
-        anim_down.setEasingCurve(QEasingCurve.InOutSine)
-        
-        # Третья фаза: 0.85 -> 1.0 (возврат к норме)
-        anim_up2 = QPropertyAnimation(self, b"pulseValue")
-        anim_up2.setDuration(400)
-        anim_up2.setStartValue(0.85)
-        anim_up2.setEndValue(1.0)
-        anim_up2.setEasingCurve(QEasingCurve.InOutSine)
-        
-        self._pulse_animation.addAnimation(anim_up1)
-        self._pulse_animation.addAnimation(anim_down)
-        self._pulse_animation.addAnimation(anim_up2)
+        # Анимация пульсации (pulse effect)
+        # Плавное изменение яркости с правильным easing curve
+        self._pulse_animation = QPropertyAnimation(self, b"pulseValue")
+        self._pulse_animation.setDuration(1500)  # Медленный цикл для плавности
+        self._pulse_animation.setStartValue(0.0)
+        self._pulse_animation.setEndValue(1.0)
+        self._pulse_animation.setEasingCurve(QEasingCurve.InOutSine)  # Плавное замедление в концах
         self._pulse_animation.setLoopCount(-1)  # Бесконечный цикл
     
     def _apply_color_to_palette(self, color: QColor):
@@ -102,6 +77,7 @@ class SkeletonWidget(QWidget):
         
         # Создаем скругленный путь если radius > 0
         if self._radius > 0:
+            from PySide6.QtGui import QPainterPath
             path = QPainterPath()
             path.addRoundedRect(0, 0, self.width(), self.height(), self._radius, self._radius)
             painter.setClipPath(path)
@@ -109,17 +85,25 @@ class SkeletonWidget(QWidget):
         # Базовый цвет
         base_color = self._base_color or QColor("#2a2a2a")
         
-        # Применяем пульсацию к яркости
-        pulsated_color = base_color.lighter(int(100 * self._pulse_value))
+        # Пульсация: интерполяция между тёмным и светлым цветом
+        # InOutSine даёт плавное замедление в концах цикла
+        dark_color = base_color.darker(115)
+        light_color = base_color.lighter(115)
         
-        painter.fillRect(self.rect(), QBrush(pulsated_color))
+        # Интерполяция RGB компонентов
+        r = int(dark_color.red() * (1 - self._pulse_value) + light_color.red() * self._pulse_value)
+        g = int(dark_color.green() * (1 - self._pulse_value) + light_color.green() * self._pulse_value)
+        b = int(dark_color.blue() * (1 - self._pulse_value) + light_color.blue() * self._pulse_value)
+        
+        pulse_color = QColor(r, g, b)
+        painter.fillRect(self.rect(), pulse_color)
         painter.end()
     
     def start_loading(self):
         """Запуск анимации загрузки (показать скелетон)."""
         self.show()
         self._is_loading = True
-        self._pulse_value = 1.0
+        self._pulse_value = 0.0
         
         # Если цвет не задан явно, пробуем получить из палитры
         if self._base_color is None:
@@ -138,10 +122,6 @@ class SkeletonWidget(QWidget):
     def is_loading(self) -> bool:
         """Проверка состояния загрузки."""
         return self._is_loading
-    
-    def setOrientation(self, orientation: str):
-        """Изменение ориентации скелетона."""
-        self._orientation = orientation
     
     def setColor(self, color: str):
         """Изменение цвета скелетона."""
