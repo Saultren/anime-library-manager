@@ -53,7 +53,6 @@ class SkeletonWidget(QWidget):
         """Применяет цвет к палитре виджета."""
         palette = self.palette()
         palette.setColor(QPalette.Window, color)
-        palette.setColor(QPalette.Background, color)
         self.setPalette(palette)
         self.setAutoFillBackground(True)
     

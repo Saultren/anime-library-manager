@@ -175,8 +175,8 @@ class AnimeModal(QWidget):
             self.poster_skeleton.hide()
             self.poster_label.show()
 
-        top_layout.addWidget(self.poster_skeleton)
         top_layout.addWidget(self.poster_label)
+        top_layout.addWidget(self.poster_skeleton)
 
         # Фиксированная ширина для контента (чтобы описание не растягивалось)
         CONTENT_WIDTH = 700  # Подберите под ваш размер экрана
@@ -208,8 +208,8 @@ class AnimeModal(QWidget):
             self.title_ru_skeleton.hide()
             title_ru.show()
             
-        right_layout.addWidget(self.title_ru_skeleton)
         right_layout.addWidget(title_ru)
+        right_layout.addWidget(self.title_ru_skeleton)
         self.title_ru_label = title_ru  # Сохраняем ссылку для обновления
 
         # Заголовок JP
@@ -230,8 +230,8 @@ class AnimeModal(QWidget):
             self.title_jp_skeleton.hide()
             title_jp.show()
             
-        right_layout.addWidget(self.title_jp_skeleton)
         right_layout.addWidget(title_jp)
+        right_layout.addWidget(self.title_jp_skeleton)
         self.title_jp_label = title_jp  # Сохраняем ссылку для обновления
 
         # Инфо-блоки со скелетонами
@@ -267,8 +267,8 @@ class AnimeModal(QWidget):
                 skeleton.hide()
                 lbl_value.show()
             
-            parent_layout.addWidget(skeleton)
             parent_layout.addWidget(info_row)
+            parent_layout.addWidget(skeleton)
             return lbl_value, skeleton
 
         self.score_label, self.score_skeleton = add_info_block_with_skeleton(
@@ -314,8 +314,8 @@ class AnimeModal(QWidget):
             self.description_skeleton.hide()
             description.show()
         
-        right_layout.addWidget(self.description_skeleton)
         right_layout.addWidget(description)
+        right_layout.addWidget(self.description_skeleton)
         self.description_edit = description  # Сохраняем ссылку для обновления
 
         top_layout.addWidget(right_container)
