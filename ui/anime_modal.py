@@ -141,9 +141,6 @@ class AnimeModal(QWidget):
         # ===== СКЕЛЕТОН ДЛЯ ПОСТЕРА =====
         POSTER_WIDTH = 320
         POSTER_HEIGHT = 480
-        self.poster_skeleton = SkeletonWidget(self.center_block)
-        self.poster_skeleton.setFixedSize(QSize(POSTER_WIDTH, POSTER_HEIGHT))
-        self.poster_skeleton.hide()  # Скрыт по умолчанию
         
         # Постер (поверх скелетона в layout)
         self.poster_label = QLabel()
@@ -162,6 +159,11 @@ class AnimeModal(QWidget):
         else:
             self.poster_label.setText("Нет постера")
 
+        # Скелетон для постера - тот же размер, добавляется ПЕРВЫМ в layout
+        self.poster_skeleton = SkeletonWidget(self.center_block)
+        self.poster_skeleton.setFixedSize(QSize(POSTER_WIDTH, POSTER_HEIGHT))
+        self.poster_skeleton.hide()  # Скрыт по умолчанию
+        
         # Если метаданных нет — показываем скелетон сразу
         metadata = entry.metadata or {}
         has_metadata = bool(metadata)
@@ -188,16 +190,16 @@ class AnimeModal(QWidget):
         right_layout = QVBoxLayout(right_container)
         right_layout.setSpacing(self.DEFAULT_MARGIN)
 
-        # ===== СКЕЛЕТОНЫ ДЛЯ ТЕКСТОВЫХ ПОЛЕЙ =====
         # Заголовок RU
-        self.title_ru_skeleton = SkeletonWidget(right_container)
-        self.title_ru_skeleton.setFixedHeight(40)
-        self.title_ru_skeleton.hide()
-        
         title_ru = QLabel(metadata.get('title', {}).get('russian', entry.clean_name))
         title_ru.setObjectName("titleRU")
         title_ru.setWordWrap(True)
         title_ru.setSizePolicy(QSizePolicy.Preferred, QSizePolicy.MinimumExpanding)
+        
+        # Скелетон для заголовка RU - создается ПОСЛЕ label
+        self.title_ru_skeleton = SkeletonWidget(right_container)
+        self.title_ru_skeleton.setFixedHeight(40)
+        self.title_ru_skeleton.hide()
         
         if not has_metadata:
             self.title_ru_skeleton.start_loading()
@@ -211,14 +213,15 @@ class AnimeModal(QWidget):
         self.title_ru_label = title_ru  # Сохраняем ссылку для обновления
 
         # Заголовок JP
-        self.title_jp_skeleton = SkeletonWidget(right_container)
-        self.title_jp_skeleton.setFixedHeight(30)
-        self.title_jp_skeleton.hide()
-        
         title_jp = QLabel(metadata.get('title', {}).get('native', ''))
         title_jp.setObjectName("titleJP")
         title_jp.setWordWrap(True)
         title_jp.setSizePolicy(QSizePolicy.Preferred, QSizePolicy.MinimumExpanding)
+        
+        # Скелетон для заголовка JP - создается ПОСЛЕ label
+        self.title_jp_skeleton = SkeletonWidget(right_container)
+        self.title_jp_skeleton.setFixedHeight(30)
+        self.title_jp_skeleton.hide()
         
         if not has_metadata:
             self.title_jp_skeleton.start_loading()
@@ -252,7 +255,7 @@ class AnimeModal(QWidget):
             layout.addWidget(lbl_value)
             layout.addStretch()
             
-            # Скелетон для значения
+            # Скелетон для значения - создается ПОСЛЕ label
             skeleton = SkeletonWidget(info_row)
             skeleton.setFixedHeight(20)
             skeleton.hide()
@@ -282,10 +285,6 @@ class AnimeModal(QWidget):
         )
 
         # Описание со скелетоном
-        self.description_skeleton = SkeletonWidget(right_container)
-        self.description_skeleton.setFixedHeight(220)
-        self.description_skeleton.hide()
-        
         description = QTextEdit(metadata.get('description', 'Описание недоступно'))
         description.setObjectName("description")
         description.setReadOnly(True)
@@ -302,6 +301,11 @@ class AnimeModal(QWidget):
                 line-height: 1.5;
             }
         """)
+        
+        # Скелетон для описания - создается ПОСЛЕ QTextEdit
+        self.description_skeleton = SkeletonWidget(right_container)
+        self.description_skeleton.setFixedHeight(220)
+        self.description_skeleton.hide()
         
         if not has_metadata:
             self.description_skeleton.start_loading()
