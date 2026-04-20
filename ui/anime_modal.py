@@ -160,7 +160,7 @@ class AnimeModal(QWidget):
             self.poster_label.setText("Нет постера")
 
         # Скелетон для постера - тот же размер, добавляется ПЕРВЫМ в layout
-        self.poster_skeleton = SkeletonWidget(self.center_block)
+        self.poster_skeleton = SkeletonWidget(self.center_block, radius=12)
         self.poster_skeleton.setFixedSize(QSize(POSTER_WIDTH, POSTER_HEIGHT))
         self.poster_skeleton.hide()  # Скрыт по умолчанию
         
@@ -197,7 +197,7 @@ class AnimeModal(QWidget):
         title_ru.setSizePolicy(QSizePolicy.Preferred, QSizePolicy.MinimumExpanding)
         
         # Скелетон для заголовка RU - создается ПОСЛЕ label
-        self.title_ru_skeleton = SkeletonWidget(right_container)
+        self.title_ru_skeleton = SkeletonWidget(right_container, radius=6)
         self.title_ru_skeleton.setFixedHeight(40)
         self.title_ru_skeleton.hide()
         
@@ -219,7 +219,7 @@ class AnimeModal(QWidget):
         title_jp.setSizePolicy(QSizePolicy.Preferred, QSizePolicy.MinimumExpanding)
         
         # Скелетон для заголовка JP - создается ПОСЛЕ label
-        self.title_jp_skeleton = SkeletonWidget(right_container)
+        self.title_jp_skeleton = SkeletonWidget(right_container, radius=6)
         self.title_jp_skeleton.setFixedHeight(30)
         self.title_jp_skeleton.hide()
         
@@ -256,7 +256,7 @@ class AnimeModal(QWidget):
             layout.addStretch()
             
             # Скелетон для значения - создается ПОСЛЕ label
-            skeleton = SkeletonWidget(info_row)
+            skeleton = SkeletonWidget(info_row, radius=4)
             skeleton.setFixedHeight(20)
             skeleton.hide()
             
@@ -303,7 +303,7 @@ class AnimeModal(QWidget):
         """)
         
         # Скелетон для описания - создается ПОСЛЕ QTextEdit
-        self.description_skeleton = SkeletonWidget(right_container)
+        self.description_skeleton = SkeletonWidget(right_container, radius=6)
         self.description_skeleton.setFixedHeight(220)
         self.description_skeleton.hide()
         

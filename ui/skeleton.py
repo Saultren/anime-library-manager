@@ -7,8 +7,8 @@
 """
 
 from PySide6.QtWidgets import QWidget, QSizePolicy
-from PySide6.QtCore import QTimer, Qt
-from PySide6.QtGui import QColor, QPalette
+from PySide6.QtCore import QTimer, Qt, QRectF
+from PySide6.QtGui import QColor, QPalette, QPainter, QLinearGradient, QBrush
 
 
 class SkeletonWidget(QWidget):
@@ -23,11 +23,12 @@ class SkeletonWidget(QWidget):
     ORIENTATION_HORIZONTAL = "horizontal"
     ORIENTATION_VERTICAL = "vertical"
     
-    def __init__(self, parent=None, orientation=ORIENTATION_AUTO, color=None):
+    def __init__(self, parent=None, orientation=ORIENTATION_AUTO, color=None, radius=0):
         super().__init__(parent)
         
         self._orientation = orientation
         self._is_loading = False
+        self._radius = radius  # Радиус скругления углов
         
         # Настройка внешнего вида
         self.setObjectName("skeletonWidget")
@@ -43,37 +44,55 @@ class SkeletonWidget(QWidget):
             # Цвет будет взят из styles.qss
             self._base_color = None
         
-        # Анимация переливания через изменение цвета
+        # Анимация переливания через градиент в paintEvent (эффективнее)
         self._gradient_offset = 0.0
         self.shimmer_timer = QTimer(self)
         self.shimmer_timer.timeout.connect(self._on_shimmer_tick)
-        self.shimmer_timer.setInterval(50)  # 20 FPS для плавности
+        self.shimmer_timer.setInterval(80)  # ~12 FPS для экономии ресурсов
     
     def _apply_color_to_palette(self, color: QColor):
         """Применяет цвет к палитре виджета."""
         palette = self.palette()
         palette.setColor(QPalette.Window, color)
         self.setPalette(palette)
-        self.setAutoFillBackground(True)
+        self.setAutoFillBackground(False)  # Отключаем автозаполнение, рисуем сами
+    
+    def paintEvent(self, event):
+        """Отрисовка скелетона с градиентом и скруглениями."""
+        if not self._is_loading:
+            return
+        
+        painter = QPainter(self)
+        painter.setRenderHint(QPainter.Antialiasing, True)
+        
+        # Создаем скругленный путь если radius > 0
+        if self._radius > 0:
+            path = QPainterPath()
+            path.addRoundedRect(0, 0, self.width(), self.height(), self._radius, self._radius)
+            painter.setClipPath(path)
+        
+        # Базовый цвет
+        base_color = self._base_color or QColor("#2a2a2a")
+        highlight = base_color.lighter(130)
+        
+        # Градиент для эффекта переливания
+        gradient = QLinearGradient(0, 0, self.width(), self.height())
+        gradient.setColorAt(0.0, base_color)
+        gradient.setColorAt(max(0.0, self._gradient_offset - 0.2), base_color)
+        gradient.setColorAt(self._gradient_offset, highlight)
+        gradient.setColorAt(min(1.0, self._gradient_offset + 0.2), base_color)
+        gradient.setColorAt(1.0, base_color)
+        
+        painter.fillRect(self.rect(), QBrush(gradient))
+        painter.end()
     
     def _on_shimmer_tick(self):
         """Тик анимации переливания."""
-        if not self._is_loading or self._base_color is None:
+        if not self._is_loading:
             return
         
-        self._gradient_offset = (self._gradient_offset + 0.02) % 1.0
-        
-        # Вычисляем цвет подсветки на основе оффсета
-        highlight = self._base_color.lighter(115)
-        
-        # Интерполяция между базовым цветом и подсветкой
-        factor = abs((self._gradient_offset - 0.5) * 2)  # 0..1..0
-        r = int(self._base_color.red() * (1 - factor) + highlight.red() * factor)
-        g = int(self._base_color.green() * (1 - factor) + highlight.green() * factor)
-        b = int(self._base_color.blue() * (1 - factor) + highlight.blue() * factor)
-        
-        current_color = QColor(r, g, b)
-        self._apply_color_to_palette(current_color)
+        self._gradient_offset = (self._gradient_offset + 0.03) % 1.2
+        self.update()  # Перерисовываем виджет
     
     def start_loading(self):
         """Запуск анимации загрузки (показать скелетон)."""
