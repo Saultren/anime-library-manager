@@ -7,7 +7,7 @@
 """
 
 from PySide6.QtWidgets import QWidget, QSizePolicy
-from PySide6.QtCore import QTimer, Qt, QRectF, QPropertyAnimation, QEasingCurve, Property
+from PySide6.QtCore import QTimer, Qt, QRectF, QPropertyAnimation, QEasingCurve, Property, QSequentialAnimationGroup
 from PySide6.QtGui import QColor, QPalette, QPainter, QPainterPath, QBrush
 
 
@@ -45,13 +45,34 @@ class SkeletonWidget(QWidget):
             # Цвет будет взят из styles.qss
             self._base_color = None
         
-        # Анимация пульсации через QPropertyAnimation
-        self._pulse_animation = QPropertyAnimation(self, b"pulseValue")
-        self._pulse_animation.setDuration(1200)  # 1.2 секунды
-        self._pulse_animation.setStartValue(0.85)
-        self._pulse_animation.setEndValue(1.15)
+        # Анимация пульсации через QPropertyAnimation - последовательность: 1.0 -> 1.15 -> 0.85 -> 1.0
+        self._pulse_animation = QSequentialAnimationGroup(self)
+        
+        # Первая фаза: 1.0 -> 1.15 (подъем к максимуму)
+        anim_up1 = QPropertyAnimation(self, b"pulseValue")
+        anim_up1.setDuration(400)
+        anim_up1.setStartValue(1.0)
+        anim_up1.setEndValue(1.15)
+        anim_up1.setEasingCurve(QEasingCurve.InOutSine)
+        
+        # Вторая фаза: 1.15 -> 0.85 (спуск к минимуму)
+        anim_down = QPropertyAnimation(self, b"pulseValue")
+        anim_down.setDuration(800)
+        anim_down.setStartValue(1.15)
+        anim_down.setEndValue(0.85)
+        anim_down.setEasingCurve(QEasingCurve.InOutSine)
+        
+        # Третья фаза: 0.85 -> 1.0 (возврат к норме)
+        anim_up2 = QPropertyAnimation(self, b"pulseValue")
+        anim_up2.setDuration(400)
+        anim_up2.setStartValue(0.85)
+        anim_up2.setEndValue(1.0)
+        anim_up2.setEasingCurve(QEasingCurve.InOutSine)
+        
+        self._pulse_animation.addAnimation(anim_up1)
+        self._pulse_animation.addAnimation(anim_down)
+        self._pulse_animation.addAnimation(anim_up2)
         self._pulse_animation.setLoopCount(-1)  # Бесконечный цикл
-        self._pulse_animation.setEasingCurve(QEasingCurve.InOutSine)  # Замедление на концах
     
     def _apply_color_to_palette(self, color: QColor):
         """Применяет цвет к палитре виджета."""
