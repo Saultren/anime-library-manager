@@ -1,5 +1,10 @@
 # Anime Library Manager
 
+[![Python 3.9+](https://img.shields.io/badge/python-3.9+-blue.svg)](https://www.python.org/downloads/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![PySide6](https://img.shields.io/badge/PySide6-6.5+-green.svg)](https://doc.qt.io/qtforpython/)
+[![asyncio](https://img.shields.io/badge/asyncio-native-orange.svg)](https://docs.python.org/3/library/asyncio.html)
+
 Локальное приложение с GUI для управления коллекцией аниме с автоматическим получением метаданных из Shikimori API, встроенным торрент-менеджером и воспроизведением через mpv.
 
 ---
